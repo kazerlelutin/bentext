@@ -14,13 +14,12 @@ Server listens on **http://localhost:8080**.
 
 ## Endpoints
 
-| Method | Route                 | Description                              |
-| ------ | --------------------- | ---------------------------------------- |
-| GET    | `/`                   | Welcome message                          |
-| GET    | `/health`             | Health check (status ok)                  |
-| GET    | `/api/hello?name=...` | Greeting (optional `name` query param)    |
+| Method | Route                 | Description                                 |
+| ------ | --------------------- | ------------------------------------------- |
+| GET    | `/`                   | List of all available routes                |
+| GET    | `/health`             | Health check (status ok)                    |
 | GET    | `/api/recipes`        | List all recipes from the `recipes/` folder |
-| POST   | `/api/convert/bentxt` | Convert bentxt text (request body) to JSON |
+| POST   | `/api/convert/bentxt` | Convert bentxt text (request body) to JSON  |
 
 ## Examples
 
@@ -46,13 +45,13 @@ Bentxt is a plain-text recipe format. The file is split into **sections** by the
 
 ### Section order
 
-| Section index | Content    | Required |
-|---------------|------------|----------|
-| 0             | Identity   | yes      |
-| 1             | Ingredients| yes      |
-| 2             | Steps      | yes      |
-| 3             | Notes *or* tags (if only 4 sections) | no |
-| 4             | Tags (only if section 3 is notes)     | no |
+| Section index | Content                              | Required |
+| ------------- | ------------------------------------ | -------- |
+| 0             | Identity                             | yes      |
+| 1             | Ingredients                          | yes      |
+| 2             | Steps                                | yes      |
+| 3             | Notes _or_ tags (if only 4 sections) | no       |
+| 4             | Tags (only if section 3 is notes)    | no       |
 
 So:
 
@@ -72,13 +71,13 @@ Three lines (order matters):
 
 One ingredient per line. Each line can be:
 
-- **Simple:** `name|quantity|unit|note`  
-  - `quantity` and `unit` are optional (defaults: `1`, `piece`).  
-  - `note` is optional.  
+- **Simple:** `name|quantity|unit|note`
+  - `quantity` and `unit` are optional (defaults: `1`, `piece`).
+  - `note` is optional.
   - Example: `flour|200|g` or `eggs|2|piece|room temperature`.
 
-- **With alternatives:** use `~` to separate the main ingredient from alternatives.  
-  - Format: `main|qty|unit|note ~ alt1|qty|unit|note ~ alt2|...`  
+- **With alternatives:** use `~` to separate the main ingredient from alternatives.
+  - Format: `main|qty|unit|note ~ alt1|qty|unit|note ~ alt2|...`
   - Example: `yogurt|120|ml ~ milk|120|ml` (yogurt or milk).
 
 ### Section 2 – Steps
