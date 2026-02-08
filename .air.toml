@@ -1,0 +1,19 @@
+# Air - live reload pour bentext
+# Lancer avec: air (depuis la racine du projet)
+
+root = "."
+tmp_dir = "tmp"
+
+[build]
+  cmd = "go build -o ./tmp/main.exe ./cmd/api"
+  bin = "./tmp/main.exe"
+  include_ext = ["go", "toml"]
+  exclude_dir = ["tmp", "recipes", ".git"]
+
+[run]
+  # Air exécute le binaire depuis la racine du projet :
+  # le dossier "recipes" est trouvé via filepath.Join(".", "recipes")
+  bin = "./tmp/main.exe"
+
+[misc]
+  clean_on_exit = false
