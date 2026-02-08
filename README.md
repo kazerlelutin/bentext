@@ -18,16 +18,34 @@ Server listens on **http://localhost:8080**.
 | ------ | --------------------- | ------------------------------------------- |
 | GET    | `/`                   | List of all available routes                |
 | GET    | `/health`             | Health check (status ok)                    |
-| GET    | `/api/recipes`        | List all recipes from the `recipes/` folder |
+| GET    | `/api/recipes`        | List all recipes (`?lang=fr` to filter by language) |
 | POST   | `/api/convert/bentxt` | Convert bentxt text (request body) to JSON  |
+| GET    | `/public/*`           | Static files (e.g. recipe images)           |
+
+## Recipe images
+
+Place images in the **`public/`** folder. Each image must use the **same base name as the recipe file, without the language suffix**:
+
+- Recipe: `recipes/onigiri-kimchi-mozza.fr.bentext` → image: `public/onigiri-kimchi-mozza.jpg` (or `.png`, `.gif`)
+- Recipe: `recipes/soupe-oignon.bentext` → image: `public/soupe-oignon.jpg`
+
+Supported formats: `.jpg`, `.jpeg`, `.png`, `.gif`. In **GET /api/recipes**, each recipe gets an optional `image` object with full URL and dimensions:
+
+```json
+"image": {
+  "url": "http://localhost:8080/public/onigiri-kimchi-mozza.jpg",
+  "width": 1200,
+  "height": 800
+}
+```
 
 ## Examples
 
 ```bash
 curl http://localhost:8080/
 curl http://localhost:8080/health
-curl "http://localhost:8080/api/hello?name=Alice"
 curl http://localhost:8080/api/recipes
+curl "http://localhost:8080/api/recipes?lang=fr"
 curl -X POST http://localhost:8080/api/convert/bentxt -H "Content-Type: text/plain" -d "Recipe name
 4
 Short description.
@@ -126,6 +144,12 @@ Parsed recipes are returned as JSON with this structure:
 - `steps`: array of strings
 - `notes`: array of strings
 - `tags`: array of strings
+- `image` (optional): `{ url, width, height }` — full image URL and dimensions when a matching file exists in `public/`
+
+## Features
+
+- **CORS**: permissive (`Access-Control-Allow-Origin: *`) for all routes
+- **Rate limiting**: 100 requests per minute per IP (429 when exceeded)
 
 ## Build
 
@@ -138,18 +162,19 @@ go build -o bentext.exe ./cmd/api
 
 ```
 bentext/
-├── cmd/api/           # Application entrypoint
+├── cmd/api/            # Application entrypoint
 │   └── main.go
-├── internal/handler/  # HTTP handlers
+├── internal/handler/   # HTTP handlers
 │   ├── home.go
 │   ├── health.go
-│   ├── hello.go
 │   ├── recipes.go
-│   └── convert.go
-├── internal/recipe/   # Bentxt parsing
+│   ├── convert.go
+│   └── image.go        # Recipe image lookup & dimensions
+├── internal/recipe/    # Bentxt parsing
 │   ├── recipe.go
 │   └── parse.go
-├── recipes/           # Recipe files (.bentext, .en, etc.)
+├── public/             # Static files (recipe images, same base name as .bentext)
+├── recipes/            # Recipe files (.bentext, .fr.bentext, etc.)
 ├── go.mod
 └── README.md
 ```

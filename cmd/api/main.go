@@ -17,6 +17,7 @@ const (
 
 func main() {
 	mux := http.NewServeMux()
+	mux.Handle("/public/", http.StripPrefix("/public/", handler.PublicFileServer()))
 	mux.HandleFunc("/api/recipes", handler.Recipes)
 	mux.HandleFunc("/api/recipes/", handler.Recipes)
 	mux.HandleFunc("/api/convert/bentxt", handler.ConvertBentxt)

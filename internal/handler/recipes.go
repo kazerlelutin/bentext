@@ -36,8 +36,21 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 		lang := langFromFilename(entry.Name())
 		rec := recipe.Parse(content, i, lang)
 		if rec != nil {
+			if img := findRecipeImage(r, publicDir(), entry.Name()); img != nil {
+				rec.Image = img
+			}
 			result = append(result, rec)
 		}
+	}
+
+	if langFilter := strings.TrimSpace(r.URL.Query().Get("lang")); langFilter != "" {
+		filtered := result[:0]
+		for _, rec := range result {
+			if rec.Lang == langFilter {
+				filtered = append(filtered, rec)
+			}
+		}
+		result = filtered
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -85,8 +98,9 @@ func readFileContent(path string) (string, error) {
 }
 
 func langFromFilename(name string) string {
-	ext := strings.TrimPrefix(filepath.Ext(name), ".")
-	if ext == "bentext" {
+	stem := strings.TrimSuffix(name, ".bentext")
+	ext := strings.TrimPrefix(filepath.Ext(stem), ".")
+	if ext == "" {
 		return "fr"
 	}
 	return ext

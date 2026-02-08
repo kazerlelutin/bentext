@@ -21,6 +21,13 @@ type Alternative struct {
 	Note     string  `json:"note,omitempty"`
 }
 
+// RecipeImage holds the public URL and dimensions of a recipe image.
+type RecipeImage struct {
+	URL    string `json:"url"`
+	Width  int    `json:"width"`
+	Height int    `json:"height"`
+}
+
 type Recipe struct {
 	ID          int          `json:"id"`
 	Lang        string       `json:"lang"`
@@ -29,4 +36,5 @@ type Recipe struct {
 	Steps       []string     `json:"steps"`
 	Notes       []string     `json:"notes"`
 	Tags        []string     `json:"tags"`
+	Image       *RecipeImage `json:"image,omitempty"`
 }
