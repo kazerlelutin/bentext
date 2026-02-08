@@ -2,9 +2,17 @@ package main
 
 import (
 	"log"
+	"net"
 	"net/http"
+	"sync"
+	"time"
 
 	"bentext/internal/handler"
+)
+
+const (
+	rateLimitRequests = 100
+	rateLimitWindow   = time.Minute
 )
 
 func main() {
@@ -18,9 +26,42 @@ func main() {
 
 	port := ":8080"
 	log.Printf("API démarrée sur http://localhost%s", port)
-	if err := http.ListenAndServe(port, cors(mux)); err != nil {
+	if err := http.ListenAndServe(port, cors(rateLimit(mux))); err != nil {
 		log.Fatal(err)
 	}
+}
+
+// rateLimit limits each IP to rateLimitRequests per rateLimitWindow (429 when exceeded).
+func rateLimit(next http.Handler) http.Handler {
+	var (
+		mu      sync.Mutex
+		clients = make(map[string][]time.Time)
+	)
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		ip, _, _ := net.SplitHostPort(r.RemoteAddr)
+		if ip == "" {
+			ip = r.RemoteAddr
+		}
+		mu.Lock()
+		now := time.Now()
+		cutoff := now.Add(-rateLimitWindow)
+		n := 0
+		for _, t := range clients[ip] {
+			if t.After(cutoff) {
+				clients[ip][n] = t
+				n++
+			}
+		}
+		clients[ip] = clients[ip][:n]
+		if len(clients[ip]) >= rateLimitRequests {
+			mu.Unlock()
+			w.WriteHeader(http.StatusTooManyRequests)
+			return
+		}
+		clients[ip] = append(clients[ip], now)
+		mu.Unlock()
+		next.ServeHTTP(w, r)
+	})
 }
 
 func cors(next http.Handler) http.Handler {
