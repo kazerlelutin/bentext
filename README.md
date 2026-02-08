@@ -2,6 +2,8 @@
 
 Simple HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** text format.
 
+[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-ff5f5f?logo=kofi&logoColor=white)](https://ko-fi.com/kazerlelutin)
+
 ## Run the API
 
 ```bash
