@@ -58,13 +58,16 @@ func findRecipeImage(r *http.Request, publicDir, recipeFilename string) *recipe.
 	base := recipeBaseName(recipeFilename)
 	for _, ext := range imageExts {
 		fpath := filepath.Join(publicDir, base+ext)
+
 		if _, err := os.Stat(fpath); err != nil {
 			continue
 		}
+
 		width, height, err := imageDimensions(fpath)
 		if err != nil {
 			continue
 		}
+
 		return &recipe.RecipeImage{
 			URL:    baseURL(r) + "/public/" + base + ext,
 			Width:  width,
