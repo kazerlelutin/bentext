@@ -19,7 +19,7 @@ var imageExts = []string{".jpg", ".jpeg", ".png", ".gif"}
 // e.g. "onigiri-kimchi-mozza.fr.bentext" -> "onigiri-kimchi-mozza"
 func recipeBaseName(recipeFilename string) string {
 	name := strings.TrimSuffix(recipeFilename, ".bentext")
-	for _, lang := range []string{".fr", ".en", ".es", ".de", ".it", ".ko", ".zh"} {
+	for _, lang := range []string{".fr", ".en", ".es", ".de", ".it", ".ko", ".zh", ".ja"} {
 		name = strings.TrimSuffix(name, lang)
 	}
 	return name
