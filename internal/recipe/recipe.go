@@ -29,7 +29,7 @@ type RecipeImage struct {
 }
 
 type Recipe struct {
-	ID          int          `json:"id"`
+	Slug        string       `json:"slug"`
 	Lang        string       `json:"lang"`
 	Identity    Identity     `json:"identity"`
 	Ingredients []Ingredient `json:"ingredients"`

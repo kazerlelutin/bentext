@@ -27,14 +27,15 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 	}
 
 	var result []*recipe.Recipe
-	for i, entry := range entries {
+	for _, entry := range entries {
 		content, err := readFileContent(filepath.Join(recipesDir, entry.Name()))
 		if err != nil {
 			log.Printf("recipes: lecture %s: %v", entry.Name(), err)
 			continue
 		}
+		slug := slugFromFilename(entry.Name())
 		lang := langFromFilename(entry.Name())
-		rec := recipe.Parse(content, i, lang)
+		rec := recipe.Parse(content, slug, lang)
 		if rec != nil {
 			if img := findRecipeImage(r, publicDir(), entry.Name()); img != nil {
 				rec.Image = img
@@ -95,6 +96,15 @@ func readFileContent(path string) (string, error) {
 		return "", err
 	}
 	return string(b), nil
+}
+
+func slugFromFilename(name string) string {
+	stem := strings.TrimSuffix(name, ".bentext")
+	ext := filepath.Ext(stem)
+	if ext != "" {
+		return strings.TrimSuffix(stem, ext)
+	}
+	return stem
 }
 
 func langFromFilename(name string) string {

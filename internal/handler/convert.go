@@ -4,14 +4,13 @@ import (
 	"encoding/json"
 	"io"
 	"net/http"
-	"strconv"
 
 	"bentext/internal/recipe"
 )
 
 // ConvertBentxt accepts text in bentxt format and returns the recipe in JSON.
 // POST /api/convert/bentxt
-// Query: lang (optional, default "fr"), id (optional, default 0)
+// Query: lang (optional, default "fr"), slug (optional, default "")
 func ConvertBentxt(w http.ResponseWriter, r *http.Request) {
 	body, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -24,14 +23,9 @@ func ConvertBentxt(w http.ResponseWriter, r *http.Request) {
 	if lang == "" {
 		lang = "fr"
 	}
-	id := 0
-	if idStr := r.URL.Query().Get("id"); idStr != "" {
-		if n, err := strconv.Atoi(idStr); err == nil {
-			id = n
-		}
-	}
+	slug := r.URL.Query().Get("slug")
 
-	rec := recipe.Parse(string(body), id, lang)
+	rec := recipe.Parse(string(body), slug, lang)
 	if rec == nil {
 		http.Error(w, "Invalid bentxt format (at least 3 sections separated by ---)", http.StatusBadRequest)
 		return

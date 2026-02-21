@@ -9,7 +9,7 @@ const defaultUnit = "piece"
 
 // Parse decodes text content in bentxt format and returns a Recipe.
 // The format uses "---" to separate: identity, ingredients, steps, (notes), tags.
-func Parse(content string, id int, lang string) *Recipe {
+func Parse(content string, slug string, lang string) *Recipe {
 	lines := splitAndTrim(content)
 	sections := strings.Split(content, "---")
 	if len(sections) < 3 {
@@ -17,7 +17,7 @@ func Parse(content string, id int, lang string) *Recipe {
 	}
 
 	r := &Recipe{
-		ID:          id,
+		Slug:        slug,
 		Lang:        lang,
 		Identity:    Identity{},
 		Ingredients: []Ingredient{},
