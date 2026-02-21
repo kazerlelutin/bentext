@@ -6,19 +6,27 @@ type Identity struct {
 	Description string `json:"description"`
 }
 
+// SpriteCoords holds 32x32 sprite position in the ingredient sprite sheet.
+type SpriteCoords struct {
+	X int `json:"x"`
+	Y int `json:"y"`
+}
+
 type Ingredient struct {
 	Name         string        `json:"name"`
 	Quantity     float64       `json:"quantity"`
 	Unit         string        `json:"unit"`
 	Note         string        `json:"note,omitempty"`
 	Alternatives []Alternative `json:"alternatives"`
+	Icon         *SpriteCoords `json:"icon,omitempty"`
 }
 
 type Alternative struct {
-	Name     string  `json:"name"`
-	Quantity float64 `json:"quantity"`
-	Unit     string  `json:"unit"`
-	Note     string  `json:"note,omitempty"`
+	Name     string         `json:"name"`
+	Quantity float64        `json:"quantity"`
+	Unit     string         `json:"unit"`
+	Note     string         `json:"note,omitempty"`
+	Icon     *SpriteCoords  `json:"icon,omitempty"`
 }
 
 // RecipeImage holds the public URL and dimensions of a recipe image.

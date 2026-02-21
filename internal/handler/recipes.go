@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"bentext/internal/ingredients"
 	"bentext/internal/recipe"
 )
 
@@ -40,6 +41,7 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 			if img := findRecipeImage(r, publicDir(), entry.Name()); img != nil {
 				rec.Image = img
 			}
+			enrichIngredientIcons(rec)
 			result = append(result, rec)
 		}
 	}
@@ -114,4 +116,19 @@ func langFromFilename(name string) string {
 		return "fr"
 	}
 	return ext
+}
+
+func enrichIngredientIcons(rec *recipe.Recipe) {
+	for i := range rec.Ingredients {
+		x, y, ok := ingredients.Lookup(rec.Ingredients[i].Name)
+		if ok {
+			rec.Ingredients[i].Icon = &recipe.SpriteCoords{X: x, Y: y}
+		}
+		for j := range rec.Ingredients[i].Alternatives {
+			x, y, ok := ingredients.Lookup(rec.Ingredients[i].Alternatives[j].Name)
+			if ok {
+				rec.Ingredients[i].Alternatives[j].Icon = &recipe.SpriteCoords{X: x, Y: y}
+			}
+		}
+	}
 }

@@ -21,6 +21,8 @@ func main() {
 	mux.HandleFunc("/api/recipes", handler.Recipes)
 	mux.HandleFunc("/api/recipes/", handler.Recipes)
 	mux.HandleFunc("/api/convert/bentxt", handler.ConvertBentxt)
+	mux.HandleFunc("/api/ingredients/lookup", handler.IngredientsLookup)
+	mux.HandleFunc("/api/ingredients/sprite", handler.IngredientsSprite)
 	mux.HandleFunc("/health", handler.Health)
 	mux.HandleFunc("/", handler.Home)
 
