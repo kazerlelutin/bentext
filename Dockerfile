@@ -17,24 +17,25 @@ FROM alpine:latest
 RUN apk --no-cache add ca-certificates wget
 
 RUN addgroup -g 1001 -S bentext && \
-    adduser -u 1001 -S bentext -G bentext
+  adduser -u 1001 -S bentext -G bentext
 
 WORKDIR /app
 
 COPY --from=builder /app/main .
+COPY --from=builder /app/ingredient-sprites.bentext ./ingredient-sprites.bentext
 COPY --from=builder /app/recipes ./recipes
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chown -R bentext:bentext /app && \
-    chmod +x ./docker-entrypoint.sh && \
-    chmod +x ./main
+  chmod +x ./docker-entrypoint.sh && \
+  chmod +x ./main
 
 USER bentext
 
 EXPOSE 8080
 
 HEALTHCHECK --interval=30s --timeout=3s --start-period=10s --retries=3 \
-    CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
 
 CMD ["./docker-entrypoint.sh"]
