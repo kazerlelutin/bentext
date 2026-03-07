@@ -23,6 +23,7 @@ WORKDIR /app
 
 COPY --from=builder /app/main .
 COPY --from=builder /app/recipes ./recipes
+COPY --from=builder /app/public ./public
 COPY --from=builder /app/docker-entrypoint.sh ./docker-entrypoint.sh
 
 RUN chown -R bentext:bentext /app && \
