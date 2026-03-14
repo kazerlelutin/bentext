@@ -1,0 +1,50 @@
+---
+description: Règles bentext pour les recettes — format, style neutre, traductions
+globs: recipes/**/*.bentext
+alwaysApply: false
+---
+
+# Agent recettes (bentext)
+
+Lorsque tu travailles sur des fichiers de recettes dans `recipes/**/*.bentext`, applique les points suivants.
+
+## 1. Respect du format bentext
+
+Structure stricte, séparateurs `---` seuls sur une ligne :
+
+| Section | Contenu |
+|--------|---------|
+| 0 | **Identité** : 3 lignes — (1) nom de la recette, (2) nombre de parts, (3) description |
+| 1 | **Ingrédients** : une ligne par ingrédient, format `Nom|quantité|unité` ou `Nom|quantité|unité|note`. Le **nom d’ingrédient commence toujours par une majuscule**. Alternatives avec ` ~ ` |
+| 2 | **Étapes** : une ligne = une étape (phrase complète) |
+| 3 | **Conseils** (optionnel) : une ligne par conseil |
+| 4 | **Tags** : un tag par ligne |
+
+- Ingrédients : **toujours une majuscule** au début du nom (ex. `Farine de blé|250|g`, `Beurre doux|100|g`). Pas de ligne vide entre eux sauf pour séparer des sous-blocs (ex. Pâte / Garniture) si besoin. Unités cohérentes : `g`, `ml`, `pcs`, `c. à c.`, `c. à s.`, etc.
+- Les sections 3 et 4 : si seulement 4 sections au total, la dernière = tags (pas de conseils).
+
+## 2. Style d’écriture neutre et uniforme
+
+- **Phrases à l’impératif**, ton neutre et factuel.
+- **Privilégier** : « Mélanger X et Y. », « Verser… », « Cuire… », « Étaler… », « Laisser reposer… ».
+- **Éviter** : tournures personnelles (« tu peux », « on peut »), exclamations, sous-entendus. Remplacer par des consignes directes : « La pâte doit rester fluide. » plutôt que « Tu peux ajouter un peu d’eau si besoin. » → « Ajouter un peu d’eau si la pâte est trop sèche. »
+- **Cohérence** : même façon de nommer les ingrédients et les actions dans toutes les langues (équivalents standard : tsp/tbsp, 小さじ/大さじ, 小勺/大勺, etc.).
+
+Exemple de lissage :
+
+- Avant : « Tu mélanges la farine et le sucre, puis tu ajoutes le beurre. »
+- Après : « Mélanger la farine et le sucre. Ajouter le beurre. »
+
+## 3. Traductions
+
+- **Langues attendues** pour chaque recette (même base de nom, suffixe de langue) : **fr**, **en**, **ja**, **zh**, **ko**.
+- Fichiers : `nom-recette.fr.bentext`, `nom-recette.en.bentext`, `nom-recette.ja.bentext`, `nom-recette.zh.bentext`, `nom-recette.ko.bentext`.
+- Lors de la **création** d’une nouvelle recette : créer d’abord la version française, puis les 4 traductions.
+- Lors de la **modification** d’une recette (ingrédients, étapes, nombre de parts) : mettre à jour **toutes** les langues existantes pour garder le même sens et les mêmes quantités.
+
+## 4. Checklist rapide
+
+- [ ] Sections délimitées par `---`, identité sur 3 lignes, ingrédients avec `|`, étapes une par ligne.
+- [ ] Chaque nom d’ingrédient commence par une majuscule.
+- [ ] Étapes en impératif, neutres, sans « tu » / « on » inutiles.
+- [ ] Les 5 langues (fr, en, ja, zh, ko) sont présentes et alignées sur la recette.
