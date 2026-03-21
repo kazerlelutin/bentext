@@ -18,7 +18,8 @@ Server listens on **http://localhost:8080**.
 | ------ | --------------------- | ------------------------------------------- |
 | GET    | `/`                   | List of all available routes                |
 | GET    | `/health`             | Health check (status ok)                    |
-| GET    | `/api/recipes`        | List all recipes (`?lang=fr` to filter by language) |
+| GET    | `/api/recipes`        | List all recipes (`?lang=fr` to filter; `?bentext=true` or `?include=bentext` to add raw file as `bentext` next to parsed fields including `identity`) |
+| GET    | `/api/recipes/{lang}/{slug}` | One recipe: JSON by default (`?format=json`), or raw file (`?format=bentext`); `?bentext=true` embeds raw text in JSON |
 | POST   | `/api/convert/bentxt` | Convert bentxt text (request body) to JSON  |
 | GET    | `/public/*`           | Static files (e.g. recipe images)           |
 
@@ -46,6 +47,10 @@ curl http://localhost:8080/
 curl http://localhost:8080/health
 curl http://localhost:8080/api/recipes
 curl "http://localhost:8080/api/recipes?lang=fr"
+curl "http://localhost:8080/api/recipes?bentext=true"
+curl "http://localhost:8080/api/recipes/fr/banana-cake"
+curl "http://localhost:8080/api/recipes/fr/banana-cake?format=bentext"
+curl "http://localhost:8080/api/recipes/fr/banana-cake?bentext=true"
 curl -X POST http://localhost:8080/api/convert/bentxt -H "Content-Type: text/plain" -d "Recipe name
 4
 Short description.
@@ -59,7 +64,7 @@ tag1"
 
 ## Bentxt format (`.bentext`)
 
-Bentxt is a plain-text recipe format. The file is split into **sections** by the separator `---` (three hyphens on their own line). You need **at least 3 sections**: identity, ingredients, and steps. Optional 4th and 5th sections are notes and tags.
+Bentxt is a plain-text recipe format. The file is split into **sections** by the separator `---` (three hyphens on their own line). You need **at least 3 sections**: identity, ingredients, and steps. After that come optional **notes** (conseils), **tags**, and a final **bento** block (`Transport|…`, `Réchauffage|…`, etc.).
 
 ### Section order
 
@@ -68,14 +73,20 @@ Bentxt is a plain-text recipe format. The file is split into **sections** by the
 | 0             | Identity                             | yes      |
 | 1             | Ingredients                          | yes      |
 | 2             | Steps                                | yes      |
-| 3             | Notes _or_ tags (if only 4 sections) | no       |
-| 4             | Tags (only if section 3 is notes)    | no       |
+| 3             | Notes (conseils)                     | no       |
+| 4             | Tags                                 | no       |
+| 5             | Bento (repas emporté, paires préfixe–valeur) | no       |
 
-So:
+The parser detects the **bento** block when its first line starts with `Transport|`. **Tags** are always the section immediately before bento, or the last section if there is no bento.
+
+So (examples):
 
 - **3 sections:** identity, ingredients, steps.
-- **4 sections:** identity, ingredients, steps, tags.
-- **5 sections:** identity, ingredients, steps, notes, tags.
+- **4 sections:** identity, ingredients, steps, tags (no notes, no bento).
+- **5 sections:** identity, ingredients, steps, tags, bento — or notes + tags without bento.
+- **6 sections:** identity, ingredients, steps, notes, tags, bento.
+
+In **JSON** (`GET /api/recipes`, `GET /api/recipes/...`, `POST /api/convert/bentxt`), parsed bento fields appear under **`bento`** (e.g. `transport`, `reheat`, `cold`, `eating`, plus optional `leaks`, `smell`, `prep_ahead`, `holding`, `extra_notes`).
 
 ### Section 0 – Identity
 

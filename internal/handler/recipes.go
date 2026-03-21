@@ -6,11 +6,18 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"bentext/internal/ingredients"
 	"bentext/internal/recipe"
 )
+
+var allowedRecipeLangs = map[string]struct{}{
+	"fr": {}, "en": {}, "ja": {}, "zh": {}, "ko": {},
+}
+
+var recipeSlugRe = regexp.MustCompile(`^[a-z0-9]+(-[a-z0-9]+)*$`)
 
 func Recipes(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
@@ -18,6 +25,17 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	rest := strings.TrimPrefix(r.URL.Path, "/api/recipes")
+	rest = strings.Trim(rest, "/")
+	if rest != "" {
+		serveRecipeByPath(w, r, rest)
+		return
+	}
+
+	serveRecipeList(w, r)
+}
+
+func serveRecipeList(w http.ResponseWriter, r *http.Request) {
 	recipesDir := recipesDir()
 	log.Printf("recipes: dossier utilisé = %s", recipesDir)
 	entries, err := readRecipeFiles(recipesDir)
@@ -26,6 +44,8 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Impossible de lire les recettes", http.StatusInternalServerError)
 		return
 	}
+
+	includeBentext := wantBentextInJSON(r)
 
 	var result []*recipe.Recipe
 	for _, entry := range entries {
@@ -42,6 +62,9 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 				rec.Image = img
 			}
 			enrichIngredientIcons(rec)
+			if includeBentext {
+				rec.Bentext = content
+			}
 			result = append(result, rec)
 		}
 	}
@@ -61,6 +84,77 @@ func Recipes(w http.ResponseWriter, r *http.Request) {
 		log.Printf("recipes: encodage JSON: %v", err)
 		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
 	}
+}
+
+func serveRecipeByPath(w http.ResponseWriter, r *http.Request, rest string) {
+	parts := strings.Split(rest, "/")
+	if len(parts) != 2 {
+		http.NotFound(w, r)
+		return
+	}
+	lang := strings.TrimSpace(parts[0])
+	slug := strings.TrimSpace(parts[1])
+	if _, ok := allowedRecipeLangs[lang]; !ok || !recipeSlugRe.MatchString(slug) {
+		http.NotFound(w, r)
+		return
+	}
+
+	dir := recipesDir()
+	fname := slug + "." + lang + ".bentext"
+	fpath := filepath.Join(dir, fname)
+	content, err := readFileContent(fpath)
+	if err != nil {
+		if os.IsNotExist(err) {
+			http.NotFound(w, r)
+			return
+		}
+		log.Printf("recipes: lecture %s: %v", fname, err)
+		http.Error(w, "Impossible de lire la recette", http.StatusInternalServerError)
+		return
+	}
+
+	format := strings.ToLower(strings.TrimSpace(r.URL.Query().Get("format")))
+	if format == "bentext" {
+		w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+		if _, err := w.Write([]byte(content)); err != nil {
+			log.Printf("recipes: écriture bentext: %v", err)
+		}
+		return
+	}
+	if format != "" && format != "json" {
+		http.Error(w, "Paramètre format invalide (json ou bentext)", http.StatusBadRequest)
+		return
+	}
+
+	rec := recipe.Parse(content, slug, lang)
+	if rec == nil {
+		http.Error(w, "Recette invalide", http.StatusUnprocessableEntity)
+		return
+	}
+	if img := findRecipeImage(r, publicDir(), fname); img != nil {
+		rec.Image = img
+	}
+	enrichIngredientIcons(rec)
+	if wantBentextInJSON(r) {
+		rec.Bentext = content
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(rec); err != nil {
+		log.Printf("recipes: encodage JSON: %v", err)
+		http.Error(w, "Erreur serveur", http.StatusInternalServerError)
+	}
+}
+
+// wantBentextInJSON is true when the client asks to embed the raw .bentext in the JSON body.
+func wantBentextInJSON(r *http.Request) bool {
+	q := r.URL.Query()
+	v := strings.ToLower(strings.TrimSpace(q.Get("bentext")))
+	if v == "1" || v == "true" || v == "yes" {
+		return true
+	}
+	inc := strings.ToLower(strings.TrimSpace(q.Get("include")))
+	return inc == "bentext"
 }
 
 func recipesDir() string {

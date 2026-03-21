@@ -8,11 +8,10 @@ import (
 const defaultUnit = "piece"
 
 // Parse decodes text content in bentxt format and returns a Recipe.
-// The format uses "---" to separate: identity, ingredients, steps, (notes), tags.
+// Sections (séparées par ---) : identité, ingrédients, étapes, [conseils], tags, [bento].
 func Parse(content string, slug string, lang string) *Recipe {
-	lines := splitAndTrim(content)
-	sections := strings.Split(content, "---")
-	if len(sections) < 3 {
+	parts := splitIntoSections(content)
+	if len(parts) < 3 {
 		return nil
 	}
 
@@ -26,43 +25,141 @@ func Parse(content string, slug string, lang string) *Recipe {
 		Tags:        []string{},
 	}
 
-	currentSection := 0
-	for _, line := range lines {
-		if line == "---" {
-			currentSection++
-			continue
-		}
+	for _, line := range nonEmptyLines(parts[0]) {
+		parseIdentity(r, line)
+	}
+	for _, line := range nonEmptyLines(parts[1]) {
+		parseIngredientLine(r, line)
+	}
+	for _, line := range nonEmptyLines(parts[2]) {
+		r.Steps = append(r.Steps, line)
+	}
 
-		switch currentSection {
-		case 0:
-			parseIdentity(r, line)
-		case 1:
-			parseIngredientLine(r, line)
-		case 2:
-			r.Steps = append(r.Steps, line)
-		case 3:
-			if len(sections) == 5 {
-				r.Notes = append(r.Notes, line)
-			} else {
-				r.Tags = append(r.Tags, line)
-			}
-		case 4:
-			r.Tags = append(r.Tags, line)
-		}
+	if len(parts) > 3 {
+		assignNotesTagsBento(r, parts[3:])
 	}
 
 	return r
 }
 
-func splitAndTrim(content string) []string {
+func splitIntoSections(content string) []string {
+	raw := strings.ReplaceAll(strings.ReplaceAll(content, "\r\n", "\n"), "\r", "\n")
+	parts := strings.Split(raw, "---")
+	for i := range parts {
+		parts[i] = strings.TrimSpace(parts[i])
+	}
+	for len(parts) > 0 && parts[0] == "" {
+		parts = parts[1:]
+	}
+	for len(parts) > 0 && parts[len(parts)-1] == "" {
+		parts = parts[:len(parts)-1]
+	}
+	return parts
+}
+
+func nonEmptyLines(block string) []string {
 	var out []string
-	for _, line := range strings.Split(content, "\n") {
+	for _, line := range strings.Split(block, "\n") {
 		line = strings.TrimSpace(line)
 		if line != "" {
 			out = append(out, line)
 		}
 	}
 	return out
+}
+
+func isBentoSection(section string) bool {
+	for _, line := range nonEmptyLines(section) {
+		return strings.HasPrefix(line, "Transport|")
+	}
+	return false
+}
+
+func assignNotesTagsBento(r *Recipe, tail []string) {
+	n := len(tail)
+	if n == 0 {
+		return
+	}
+
+	if n >= 2 && isBentoSection(tail[n-1]) {
+		b := parseBentoBlock(tail[n-1])
+		if !b.isEmpty() {
+			r.Bento = b
+		}
+		r.Tags = linesFromBlock(tail[n-2])
+		if n >= 3 {
+			r.Notes = joinSectionLines(tail[:n-2])
+		}
+		return
+	}
+
+	if n >= 2 {
+		r.Tags = linesFromBlock(tail[n-1])
+		r.Notes = joinSectionLines(tail[:n-1])
+		return
+	}
+
+	if isBentoSection(tail[0]) {
+		b := parseBentoBlock(tail[0])
+		if !b.isEmpty() {
+			r.Bento = b
+		}
+		return
+	}
+	r.Tags = linesFromBlock(tail[0])
+}
+
+func linesFromBlock(block string) []string {
+	return nonEmptyLines(block)
+}
+
+func joinSectionLines(sections []string) []string {
+	var out []string
+	for _, s := range sections {
+		out = append(out, linesFromBlock(s)...)
+	}
+	return out
+}
+
+func parseBentoBlock(section string) *Bento {
+	b := &Bento{}
+	for _, line := range nonEmptyLines(section) {
+		key, val, ok := strings.Cut(line, "|")
+		if !ok {
+			continue
+		}
+		key = strings.TrimSpace(key)
+		val = strings.TrimSpace(val)
+		switch key {
+		case "Transport":
+			b.Transport = val
+		case "Réchauffage":
+			b.Reheat = val
+		case "Froid":
+			b.Cold = val
+		case "Manger":
+			b.Eating = val
+		case "Fuites":
+			b.Leaks = val
+		case "Odeur":
+			b.Smell = val
+		case "Veille":
+			b.PrepAhead = val
+		case "Tenue":
+			b.Holding = val
+		case "Notes":
+			b.ExtraNotes = val
+		}
+	}
+	return b
+}
+
+func (b *Bento) isEmpty() bool {
+	if b == nil {
+		return true
+	}
+	return b.Transport == "" && b.Reheat == "" && b.Cold == "" && b.Eating == "" &&
+		b.Leaks == "" && b.Smell == "" && b.PrepAhead == "" && b.Holding == "" && b.ExtraNotes == ""
 }
 
 func parseIdentity(r *Recipe, line string) {
