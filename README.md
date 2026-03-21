@@ -1,6 +1,6 @@
 # Bentext API
 
-Simple HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** text format.
+HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** (`.bentext`) plain-text format.
 
 [![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-ff5f5f?logo=kofi&logoColor=white)](https://ko-fi.com/kazerlelutin)
 
@@ -14,23 +14,33 @@ Server listens on **http://localhost:8080**.
 
 ## Endpoints
 
-| Method | Route                 | Description                                 |
-| ------ | --------------------- | ------------------------------------------- |
-| GET    | `/`                   | List of all available routes                |
-| GET    | `/health`             | Health check (status ok)                    |
-| GET    | `/api/recipes`        | List all recipes (`?lang=fr` to filter; `?bentext=true` or `?include=bentext` to add raw file as `bentext` next to parsed fields including `identity`) |
-| GET    | `/api/recipes/{lang}/{slug}` | One recipe: JSON by default (`?format=json`), or raw file (`?format=bentext`); `?bentext=true` embeds raw text in JSON |
-| POST   | `/api/convert/bentxt` | Convert bentxt text (request body) to JSON  |
-| GET    | `/public/*`           | Static files (e.g. recipe images)           |
+`GET /` returns a JSON **index** with the full list of routes and query variants (same information as summarized below).
+
+| Method | Route | Description |
+| ------ | ----- | ----------- |
+| GET | `/` | Route catalog (JSON) |
+| GET | `/health` | Health check |
+| GET | `/public/` | Static files (recipe images, etc.) |
+| GET | `/api/recipes` | All recipes as JSON |
+| GET | `/api/recipes?lang=fr` | Filter by language (`fr`, `en`, `ja`, `zh`, `ko`) |
+| GET | `/api/recipes?bentext=true` or `?include=bentext` | Same JSON plus raw file in `bentext` (alongside parsed fields, including `identity`) |
+| GET | `/api/recipes/{lang}/{slug}` | One recipe, e.g. `/api/recipes/fr/banana-cake` |
+| GET | `/api/recipes/{lang}/{slug}?format=json` | Explicit JSON (default if `format` is omitted) |
+| GET | `/api/recipes/{lang}/{slug}?format=bentext` | Raw `.bentext` as `text/plain; charset=utf-8` |
+| GET | `/api/recipes/{lang}/{slug}?bentext=true` | JSON with an extra `bentext` field (full source) |
+| POST | `/api/convert/bentxt` | Body = bentxt text → JSON. Optional query: `lang`, `slug` |
+| GET | `/api/ingredients/lookup` | Ingredient icon lookup (`?q=name`) |
+| GET | `/api/ingredients/sprite` | Sprite sheet URL and coordinates |
+
+Invalid `format` on a single-recipe request returns **400**; unknown `lang`/`slug` or bad path returns **404**.
 
 ## Recipe images
 
-Place images in the **`public/`** folder. Each image must use the **same base name as the recipe file, without the language suffix**:
+Place images in **`public/`**. The file base name must match the recipe **without** the language suffix:
 
-- Recipe: `recipes/onigiri-kimchi-mozza.fr.bentext` → image: `public/onigiri-kimchi-mozza.jpg` (or `.png`, `.gif`)
-- Recipe: `recipes/soupe-oignon.bentext` → image: `public/soupe-oignon.jpg`
+- Recipe: `recipes/onigiri-kimchi-mozza.fr.bentext` → `public/onigiri-kimchi-mozza.jpg` (or `.png`, `.gif`)
 
-Supported formats: `.jpg`, `.jpeg`, `.png`, `.gif`. In **GET /api/recipes**, each recipe gets an optional `image` object with full URL and dimensions:
+Supported: `.jpg`, `.jpeg`, `.png`, `.gif`. When a file matches, the JSON includes an optional `image` object:
 
 ```json
 "image": {
@@ -51,7 +61,10 @@ curl "http://localhost:8080/api/recipes?bentext=true"
 curl "http://localhost:8080/api/recipes/fr/banana-cake"
 curl "http://localhost:8080/api/recipes/fr/banana-cake?format=bentext"
 curl "http://localhost:8080/api/recipes/fr/banana-cake?bentext=true"
-curl -X POST http://localhost:8080/api/convert/bentxt -H "Content-Type: text/plain" -d "Recipe name
+curl "http://localhost:8080/api/ingredients/lookup?q=flour"
+curl "http://localhost:8080/api/ingredients/sprite"
+curl -X POST "http://localhost:8080/api/convert/bentxt?lang=en&slug=demo" \
+  -H "Content-Type: text/plain" -d "Recipe name
 4
 Short description.
 ---
@@ -62,63 +75,63 @@ Step 1.
 tag1"
 ```
 
+You can also send a file as the body (e.g. `--data-binary @recipes/banana-cake.en.bentext` on Unix shells).
+
 ## Bentxt format (`.bentext`)
 
-Bentxt is a plain-text recipe format. The file is split into **sections** by the separator `---` (three hyphens on their own line). You need **at least 3 sections**: identity, ingredients, and steps. After that come optional **notes** (conseils), **tags**, and a final **bento** block (`Transport|…`, `Réchauffage|…`, etc.).
+Files are split into **sections** by a line containing only `---` (three hyphens).
+
+**Minimum:** identity, ingredients, steps.
+
+**Optional after steps:** notes (conseils), **tags**, then a **bento** block (one `Prefix|value` per line for transport / reheating / cold chain / how to eat). In the source file, prefixes are fixed (e.g. `Transport`, `Réchauffage`, `Froid`, `Manger`) across all languages; only the text after `|` is localized.
 
 ### Section order
 
-| Section index | Content                              | Required |
-| ------------- | ------------------------------------ | -------- |
-| 0             | Identity                             | yes      |
-| 1             | Ingredients                          | yes      |
-| 2             | Steps                                | yes      |
-| 3             | Notes (conseils)                     | no       |
-| 4             | Tags                                 | no       |
-| 5             | Bento (repas emporté, paires préfixe–valeur) | no       |
+| Index | Content | Required |
+| ----- | ------- | -------- |
+| 0 | Identity (3 lines: name, servings number, description) | yes |
+| 1 | Ingredients | yes |
+| 2 | Steps | yes |
+| 3 | Notes (conseils) | no |
+| 4 | Tags | no |
+| 5 | Bento (repas emporté) | no |
 
-The parser detects the **bento** block when its first line starts with `Transport|`. **Tags** are always the section immediately before bento, or the last section if there is no bento.
+The parser treats the **last** section as **bento** if its first non-empty line starts with `Transport|`. Otherwise the last section is **tags**, and any sections before that in the tail are **notes** (or tags + bento as above).
 
-So (examples):
+Examples of block counts (identity + ingredients + steps + …):
 
-- **3 sections:** identity, ingredients, steps.
-- **4 sections:** identity, ingredients, steps, tags (no notes, no bento).
-- **5 sections:** identity, ingredients, steps, tags, bento — or notes + tags without bento.
-- **6 sections:** identity, ingredients, steps, notes, tags, bento.
-
-In **JSON** (`GET /api/recipes`, `GET /api/recipes/...`, `POST /api/convert/bentxt`), parsed bento fields appear under **`bento`** (e.g. `transport`, `reheat`, `cold`, `eating`, plus optional `leaks`, `smell`, `prep_ahead`, `holding`, `extra_notes`).
+- **3 blocks:** identity, ingredients, steps only.
+- **4 blocks:** … + tags (no notes, no bento).
+- **5 blocks:** … + tags + bento, or … + notes + tags (no bento).
+- **6 blocks:** … + notes + tags + bento.
 
 ### Section 0 – Identity
 
-Three lines (order matters):
-
-1. **Recipe name** (first line).
-2. **Servings** – a number (e.g. `4`).
-3. **Description** – free text (can be multiple lines; the last non-numeric line is used as description in the current parser).
+1. Recipe name  
+2. Servings (integer)  
+3. Description (one line in typical files; the parser consumes further identity lines with the existing rules)
 
 ### Section 1 – Ingredients
 
-One ingredient per line. Each line can be:
+- **Simple:** `name|quantity|unit|note` — `quantity` / `unit` / `note` optional (defaults: `1`, `piece`).
+- **Alternatives:** `main|qty|unit ~ alt|qty|unit ~ …`
 
-- **Simple:** `name|quantity|unit|note`
-  - `quantity` and `unit` are optional (defaults: `1`, `piece`).
-  - `note` is optional.
-  - Example: `flour|200|g` or `eggs|2|piece|room temperature`.
-
-- **With alternatives:** use `~` to separate the main ingredient from alternatives.
-  - Format: `main|qty|unit|note ~ alt1|qty|unit|note ~ alt2|...`
-  - Example: `yogurt|120|ml ~ milk|120|ml` (yogurt or milk).
+Ingredient names in JSON may get an optional `icon` (`x`, `y` in the ingredient sprite) when resolved via `/api/ingredients`.
 
 ### Section 2 – Steps
 
-One step per line. Each line is a single step (no special syntax).
+One step per line.
 
-### Section 3 & 4 – Notes and tags
+### Sections 3–4 – Notes and tags
 
-- **Notes:** one note per line (free text).
-- **Tags:** one tag per line (e.g. `breakfast`, `vegan`).
+- **Notes:** one line per tip.  
+- **Tags:** one tag per line.
 
-### Example bentxt file
+### Section 5 – Bento (optional)
+
+Lines look like `Transport|Facile`, `Réchauffage|Optionnel (four ou micro-ondes)`, etc. Optional keys include `Fuites`, `Odeur`, `Veille`, `Tenue`, `Notes` (the line prefix `Notes|` maps to JSON `extra_notes`, distinct from recipe **notes**).
+
+### Example `.bentext` file
 
 ```text
 Chocolate muffins
@@ -143,49 +156,70 @@ Resting the batter is important.
 ---
 baking
 sweet
+---
+Transport|Facile
+Réchauffage|Optionnel (four ou micro-ondes)
+Froid|Non
+Manger|À la main ou Couverts
 ```
 
-### JSON output shape
+## JSON shape (parsed recipe)
 
-Parsed recipes are returned as JSON with this structure:
+Returned by `GET /api/recipes`, `GET /api/recipes/{lang}/{slug}` (JSON mode), and `POST /api/convert/bentxt`:
 
-- `id`, `lang`
-- `identity`: `name`, `servings`, `description`
-- `ingredients`: array of `{ name, quantity, unit, note?, alternatives? }`
-- `steps`: array of strings
-- `notes`: array of strings
-- `tags`: array of strings
-- `image` (optional): `{ url, width, height }` — full image URL and dimensions when a matching file exists in `public/`
+| Field | Type | Notes |
+| ----- | ---- | ----- |
+| `slug` | string | Derived from filename |
+| `lang` | string | `fr`, `en`, `ja`, `zh`, `ko`, … |
+| `identity` | object | `name`, `servings`, `description` |
+| `ingredients` | array | `name`, `quantity`, `unit`, `note?`, `alternatives[]`, `icon?` |
+| `steps` | string[] | |
+| `notes` | string[] | Conseils |
+| `tags` | string[] | |
+| `bento` | object? | Omitted if absent in file |
+| `image` | object? | `url`, `width`, `height` |
+| `bentext` | string? | Only when `?bentext=true` or `?include=bentext` |
+
+**`bento`** (when present):
+
+| JSON field | Source prefix in file |
+| ---------- | --------------------- |
+| `transport` | `Transport` |
+| `reheat` | `Réchauffage` |
+| `cold` | `Froid` |
+| `eating` | `Manger` |
+| `leaks` | `Fuites` |
+| `smell` | `Odeur` |
+| `prep_ahead` | `Veille` |
+| `holding` | `Tenue` |
+| `extra_notes` | `Notes` |
 
 ## Features
 
-- **CORS**: permissive (`Access-Control-Allow-Origin: *`) for all routes
-- **Rate limiting**: 100 requests per minute per IP (429 when exceeded)
+- **CORS:** `Access-Control-Allow-Origin: *` on all routes  
+- **Rate limiting:** 100 requests per minute per IP (429 when exceeded)
 
 ## Build
 
 ```bash
-go build -o bentext.exe ./cmd/api
-./bentext.exe
+go build -o bentext-api ./cmd/api
+./bentext-api
 ```
 
-## Project layout (Go conventions)
+## Project layout
 
 ```
 bentext/
-├── cmd/api/            # Application entrypoint
-│   └── main.go
-├── internal/handler/   # HTTP handlers
-│   ├── home.go
-│   ├── health.go
-│   ├── recipes.go
-│   ├── convert.go
-│   └── image.go        # Recipe image lookup & dimensions
-├── internal/recipe/    # Bentxt parsing
-│   ├── recipe.go
-│   └── parse.go
-├── public/             # Static files (recipe images, same base name as .bentext)
-├── recipes/            # Recipe files (.bentext, .fr.bentext, etc.)
+├── cmd/
+│   ├── api/            # HTTP server entrypoint
+│   └── check-recipes/  # CLI: language coverage per recipe slug
+├── internal/
+│   ├── handler/        # HTTP handlers (recipes, convert, ingredients, …)
+│   ├── recipe/         # Bentxt parsing (identity … bento)
+│   └── ingredients/    # Icon lookup & sprite metadata
+├── public/             # Static assets (recipe images)
+├── recipes/            # *.bentext (e.g. *.fr.bentext)
+├── scripts/            # Optional tooling (e.g. batch edits)
 ├── go.mod
 └── README.md
 ```
