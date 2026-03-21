@@ -370,19 +370,19 @@ def has_bento_block(parts: list[str]) -> bool:
     if not parts:
         return False
     last = parts[-1].strip()
-    first = last.split("\n", 1)[0].strip()
-    return first.startswith("Transport|")
+    lines = [ln.strip() for ln in last.split("\n") if ln.strip()]
+    if not lines:
+        return False
+    if lines[0].startswith("Transport|"):
+        return True
+    if 4 <= len(lines) <= 9 and all("|" not in ln for ln in lines):
+        return True
+    return False
 
 
 def format_bento(lang: str, preset: str) -> str:
     t = PRESETS[preset][lang]
-    lines = [
-        f"Transport|{t[0]}",
-        f"Réchauffage|{t[1]}",
-        f"Froid|{t[2]}",
-        f"Manger|{t[3]}",
-    ]
-    return "\n".join(lines)
+    return "\n".join(t)
 
 
 def process_file(path: Path, lang: str, preset: str) -> bool:

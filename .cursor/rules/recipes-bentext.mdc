@@ -19,39 +19,36 @@ Structure stricte, séparateurs `---` seuls sur une ligne :
 | 2 | **Étapes** : une ligne = une étape (phrase complète) |
 | 3 | **Conseils** (optionnel) : une ligne par conseil |
 | 4 | **Tags** : un tag par ligne |
-| 5 | **Bento** (repas emporté) : une ligne par indicateur, format `Préfixe|valeur` (voir ci-dessous) |
+| 5 | **Bento** (repas emporté) : **valeurs seules**, une ligne = une valeur, **sans préfixe ni `|`** (voir ci-dessous) |
 
 - Ingrédients : **toujours une majuscule** au début du nom (ex. `Farine de blé|250|g`, `Beurre doux|100|g`). Pas de ligne vide entre eux sauf pour séparer des sous-blocs (ex. Pâte / Garniture) si besoin. Unités cohérentes : `g`, `ml`, `pcs`, `c. à c.`, `c. à s.`, etc.
 - **Ordre des blocs** (après l’identité, chaque bloc entre `---`) : **Ingrédients** → **Étapes** → **[Conseils]** → **Tags** → **Bento**. Les conseils sont optionnels ; sans eux : **Étapes** → **Tags** → **Bento**. Les **tags** précèdent toujours **Bento** ; **Bento** est toujours le **dernier** bloc.
 
-### Section Bento : préfixes et valeurs
+### Section Bento : valeurs uniquement (fichier) / clés dans le JSON
 
-Métadonnées orientées **repas à emporter** (transport, conservation, façon de manger).
+Métadonnées orientées **repas à emporter**. Dans le **fichier .bentext**, il n’y a **pas** de libellés (`Transport`, `Réchauffage`, etc.) : uniquement le **texte utile**, **dans un ordre fixe**, **entièrement traduit** dans chaque langue. L’API et le parseur associent les lignes aux champs JSON (`transport`, `reheat`, `cold`, `eating`, …).
 
-- **Une ligne par préfixe** ; pas de doublon du même préfixe dans une recette.
-- Les **préfixes** (partie avant `|`) sont **identiques dans toutes les langues** (fr, en, ja, zh, ko) ; seul le texte **après** `|` est traduit (équivalents naturels : facile / easy / 簡単, etc.).
+- **4 lignes obligatoires** (dans cet ordre) :
+  1. Facilité de transport (ex. `Facile`, `Moyen`, `Délicat` + courte précision si besoin)
+  2. Réchauffage : `Non`, `Optionnel`, `Recommandé`, `Obligatoire`, etc. (+ précision micro-ondes, four…)
+  3. Chaîne du froid / conservation : `Non`, `Conserver au frais jusqu’à consommation`, `À manger frais`, etc.
+  4. Modalité de consommation : `À la main`, `Baguettes`, `Couverts`, combinaison courte
+- **Pas de caractère `|`** dans le bloc Bento (réservé aux ingrédients ailleurs).
 - Ton factuel, formulations courtes.
 
-**Préfixes obligatoires** (dans cet ordre) :
+**Lignes optionnelles** (après les 4 obligatoires ; **même nombre** et **même ordre** entre les fichiers de langue d’une même recette) :
 
-| Préfixe | Rôle | Exemples de valeurs (à adapter / traduire après `|`) |
-|--------|------|--------------------------------------------------------|
-| `Transport` | Facilité de transport | `Facile`, `Moyen`, `Délicat` ; brève précision possible |
-| `Réchauffage` | Besoin ou possibilité de réchauffer | `Non`, `Optionnel`, `Recommandé`, `Obligatoire` ; précision (micro-ondes, four, à sec…) |
-| `Froid` | Chaîne du froid et conservation | `Non`, `Conserver au frais jusqu’à consommation`, `À manger frais`, `Ramener à température ambiante avant de manger`, etc. |
-| `Manger` | Modalité de consommation | `À la main`, `Baguettes`, `Couverts`, ou combinaison courte (ex. `Couverts ou à la main`) |
+| Rang (5→9) | Champ JSON | Rôle |
+|------------|------------|------|
+| 5 | `leaks` | Risque de fuite : `Faible`, `Moyen`, `Élevé` |
+| 6 | `smell` | Odeur en boîte fermée : `Discrète`, `Marquée` |
+| 7 | `prep_ahead` | Préparation la veille : `Oui`, `Partielle`, `Non` |
+| 8 | `holding` | Tenue après plusieurs heures : courte phrase |
+| 9 | `extra_notes` | Cas limite (mains grasses, lingette, etc.) |
 
-**Préfixes optionnels** (après les quatre obligatoires ; garder le **même ensemble** et le **même ordre** entre les fichiers de langue d’une même recette) :
+**Ancien format** `Préfixe|valeur` (ex. `Transport|Facile`) : encore accepté par le parseur pour compatibilité, mais **ne plus utiliser** dans les nouvelles recettes ni en édition.
 
-| Préfixe | Rôle | Exemples de valeurs |
-|--------|------|---------------------|
-| `Fuites` | Risque de fuite (sauce, liquide) | `Faible`, `Moyen`, `Élevé` |
-| `Odeur` | Odeur en boîte fermée (bureau, transport) | `Discrète`, `Marquée` |
-| `Veille` | Préparation possible la veille | `Oui`, `Partielle`, `Non` |
-| `Tenue` | Qualité après plusieurs heures (texture, ramollissement, séparation) | courte phrase factuelle |
-| `Notes` | Cas limite (ex. plat gras, lingette ou lavage des mains utile) | courte phrase factuelle |
-
-**Recettes existantes** : les anciens fichiers peuvent ne pas encore avoir la section Bento ; pour les **nouvelles** recettes, elle est **obligatoire**. Compléter progressivement les recettes déjà présentes si besoin.
+**Recettes existantes** : compléter progressivement si besoin.
 
 ## 2. Style d’écriture neutre et uniforme
 
@@ -70,8 +67,8 @@ Exemple de lissage :
 - **Langues attendues** pour chaque recette (même base de nom, suffixe de langue) : **fr**, **en**, **ja**, **zh**, **ko**.
 - Fichiers : `nom-recette.fr.bentext`, `nom-recette.en.bentext`, `nom-recette.ja.bentext`, `nom-recette.zh.bentext`, `nom-recette.ko.bentext`.
 - Lors de la **création** d’une nouvelle recette : créer d’abord la version française, puis les 4 traductions.
-- Lors de la **modification** d’une recette (ingrédients, étapes, nombre de parts, **section Bento**) : mettre à jour **toutes** les langues existantes pour garder le même sens, les mêmes quantités et les **mêmes préfixes Bento** (valeurs après `|` traduites).
-- **Section Bento** : mêmes lignes de préfixes dans chaque langue ; traduire uniquement la partie après `|`. Si des préfixes optionnels sont utilisés en français, les reprendre dans les autres langues dans le même ordre.
+- Lors de la **modification** d’une recette (ingrédients, étapes, nombre de parts, **section Bento**) : mettre à jour **toutes** les langues existantes pour garder le même sens, les mêmes quantités et le **même nombre de lignes Bento** dans le même ordre (chaque ligne traduite naturellement).
+- **Section Bento** : pas de clés dans le fichier ; aligner le **contenu** ligne à ligne entre langues.
 
 ## 4. Checklist rapide
 
@@ -79,4 +76,4 @@ Exemple de lissage :
 - [ ] Chaque nom d’ingrédient commence par une majuscule.
 - [ ] Étapes en impératif, neutres, sans « tu » / « on » inutiles.
 - [ ] Les 5 langues (fr, en, ja, zh, ko) sont présentes et alignées sur la recette.
-- [ ] Section **Bento** en **dernier** bloc (après les tags), préfixes obligatoires présents dans l’ordre, préfixes optionnels alignés entre langues si utilisés.
+- [ ] Section **Bento** en **dernier** bloc (après les tags), **4 lignes de valeurs** minimum (sans `|`), optionnelles 5–9 alignées entre langues si utilisées.

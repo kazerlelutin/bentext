@@ -83,7 +83,7 @@ Files are split into **sections** by a line containing only `---` (three hyphens
 
 **Minimum:** identity, ingredients, steps.
 
-**Optional after steps:** notes (conseils), **tags**, then a **bento** block (one `Prefix|value` per line for transport / reheating / cold chain / how to eat). In the source file, prefixes are fixed (e.g. `Transport`, `Réchauffage`, `Froid`, `Manger`) across all languages; only the text after `|` is localized.
+**Optional after steps:** notes (conseils), **tags**, then a **bento** block: **one value per line**, **no labels and no `|`** in that block. Lines are **fully translated** per language file. The API maps them to JSON keys (`transport`, `reheat`, `cold`, `eating`, …). **Order is fixed** (see below). Legacy lines `Préfixe|valeur` (e.g. `Transport|…`) are still accepted by the parser but should not be used in new content.
 
 ### Section order
 
@@ -96,7 +96,7 @@ Files are split into **sections** by a line containing only `---` (three hyphens
 | 4 | Tags | no |
 | 5 | Bento (repas emporté) | no |
 
-The parser treats the **last** section as **bento** if its first non-empty line starts with `Transport|`. Otherwise the last section is **tags**, and any sections before that in the tail are **notes** (or tags + bento as above).
+The **last** section is treated as **bento** when it matches the legacy `Préfixe|valeur` format, or when it has **4–9 non-empty lines with no `|`** (value-only). Otherwise the last section is **tags**, and earlier tail sections are **notes** (or tags + bento as in the examples). When there are only two tail sections, the first block is classified as **tags** vs **notes** using simple heuristics (length, word count, punctuation).
 
 Examples of block counts (identity + ingredients + steps + …):
 
@@ -129,7 +129,7 @@ One step per line.
 
 ### Section 5 – Bento (optional)
 
-Lines look like `Transport|Facile`, `Réchauffage|Optionnel (four ou micro-ondes)`, etc. Optional keys include `Fuites`, `Odeur`, `Veille`, `Tenue`, `Notes` (the line prefix `Notes|` maps to JSON `extra_notes`, distinct from recipe **notes**).
+**4 required lines** (in order): transport ease, reheating, cold chain / storage, how to eat. **Optional lines 5–9** (same order if used): leaks, smell, prep-ahead, holding, extra note (maps to JSON `extra_notes`, not recipe **notes**). Do not use `|` in this section.
 
 ### Example `.bentext` file
 
@@ -157,10 +157,10 @@ Resting the batter is important.
 baking
 sweet
 ---
-Transport|Facile
-Réchauffage|Optionnel (four ou micro-ondes)
-Froid|Non
-Manger|À la main ou Couverts
+Easy
+Optional (oven or microwave)
+No
+By hand or cutlery
 ```
 
 ## JSON shape (parsed recipe)
@@ -180,19 +180,19 @@ Returned by `GET /api/recipes`, `GET /api/recipes/{lang}/{slug}` (JSON mode), an
 | `image` | object? | `url`, `width`, `height` |
 | `bentext` | string? | Only when `?bentext=true` or `?include=bentext` |
 
-**`bento`** (when present):
+**`bento`** (when present): fields are filled from **line order** in the file (or from legacy `Préfixe|valeur` lines if present).
 
-| JSON field | Source prefix in file |
-| ---------- | --------------------- |
-| `transport` | `Transport` |
-| `reheat` | `Réchauffage` |
-| `cold` | `Froid` |
-| `eating` | `Manger` |
-| `leaks` | `Fuites` |
-| `smell` | `Odeur` |
-| `prep_ahead` | `Veille` |
-| `holding` | `Tenue` |
-| `extra_notes` | `Notes` |
+| JSON field | Source line (value-only file) |
+| ---------- | ------------------------------ |
+| `transport` | line 1 |
+| `reheat` | line 2 |
+| `cold` | line 3 |
+| `eating` | line 4 |
+| `leaks` | line 5 (optional) |
+| `smell` | line 6 (optional) |
+| `prep_ahead` | line 7 (optional) |
+| `holding` | line 8 (optional) |
+| `extra_notes` | line 9 (optional) |
 
 ## Features
 
