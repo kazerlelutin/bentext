@@ -9,33 +9,35 @@ from pathlib import Path
 RECIPE_ROOT = Path(__file__).resolve().parent.parent / "recipes"
 LANGS = ("fr", "en", "ja", "zh", "ko")
 
-# (Transport, Réchauffage, Froid, Manger) par langue
+COVER_DEFAULT = {"fr": "Optionnel", "en": "Optional", "ja": "任意", "zh": "可选", "ko": "선택"}
+
+# Par langue : (Transport, Réchauffage, Froid, Manger) — la ligne « couvert » est insérée automatiquement avant Manger.
 PRESETS: dict[str, dict[str, tuple[str, str, str, str]]] = {
     "baked_sweet": {
         "fr": (
             "Facile",
-            "Optionnel (four ou micro-ondes)",
+            "Optionnel four ~ micro-ondes",
             "Non",
-            "À la main ou Couverts",
+            "À la main",
         ),
         "en": (
             "Easy",
-            "Optional (oven or microwave)",
+            "Optional oven ~ microwave",
             "No",
-            "By hand or cutlery",
+            "By hand",
         ),
         "ja": (
             "簡単",
-            "任意（オーブンまたは電子レンジ）",
+            "任意 オーブン ~ 電子レンジ",
             "不要",
-            "手づかみまたはカトラリー",
+            "手づかみ",
         ),
-        "zh": ("容易", "可选（烤箱或微波炉）", "否", "手抓或餐具"),
+        "zh": ("容易", "可选 烤箱 ~ 微波炉", "否", "手抓"),
         "ko": (
             "쉬움",
-            "선택(오븐 또는 전자레인지)",
+            "선택 오븐 ~ 전자레인지",
             "아니오",
-            "손으로 또는 수저",
+            "손으로",
         ),
     },
     "fried": {
@@ -63,33 +65,33 @@ PRESETS: dict[str, dict[str, tuple[str, str, str, str]]] = {
     "custard": {
         "fr": (
             "Moyen",
-            "Optionnel micro-ondes",
-            "Conserver au frais jusqu'à consommation",
+            "Optionnel",
+            "Au frais",
             "Couverts",
         ),
         "en": (
             "Medium",
-            "Optional microwave",
-            "Keep chilled until eaten",
+            "Optional",
+            "Keep cold",
             "Cutlery",
         ),
         "ja": (
             "やや注意",
-            "任意（電子レンジ）",
-            "食べるまで冷蔵",
+            "任意",
+            "要冷蔵",
             "カトラリー",
         ),
-        "zh": ("中等", "可选微波炉", "食用前冷藏", "餐具"),
+        "zh": ("中等", "可选", "需冷藏", "餐具"),
         "ko": (
             "보통",
-            "선택(전자레인지)",
-            "먹을 때까지 냉장",
+            "선택",
+            "냉장",
             "수저",
         ),
     },
     "tarte_meringue": {
-        "fr": ("Délicat", "Non", "Conserver au frais", "Couverts"),
-        "en": ("Delicate", "No", "Keep chilled", "Cutlery"),
+        "fr": ("Délicat", "Non", "Au frais", "Couverts"),
+        "en": ("Delicate", "No", "Chilled", "Cutlery"),
         "ja": ("壊れやすい", "不要", "冷蔵", "カトラリー"),
         "zh": ("易损", "不需要", "冷藏", "餐具"),
         "ko": ("다소 까다로움", "불필요", "냉장", "수저"),
@@ -98,39 +100,39 @@ PRESETS: dict[str, dict[str, tuple[str, str, str, str]]] = {
         "fr": (
             "Délicat",
             "Non",
-            "Conserver au frais jusqu'à consommation",
-            "Couverts ou à la main",
+            "Au frais",
+            "Couverts ~ main",
         ),
         "en": (
             "Delicate",
             "No",
-            "Keep chilled until eaten",
-            "Cutlery or by hand",
+            "Keep cold",
+            "Cutlery ~ hand",
         ),
         "ja": (
             "壊れやすい",
             "不要",
-            "食べるまで冷蔵",
-            "カトラリーまたは手づかみ",
+            "要冷蔵",
+            "カトラリー ~ 手づかみ",
         ),
-        "zh": ("易损", "不需要", "食用前冷藏", "餐具或手抓"),
+        "zh": ("易损", "不需要", "需冷藏", "餐具 ~ 手抓"),
         "ko": (
             "다소 까다로움",
             "불필요",
-            "먹을 때까지 냉장",
-            "수저 또는 손으로",
+            "냉장",
+            "수저 ~ 손",
         ),
     },
     "dacquoise": {
-        "fr": ("Délicat", "Non", "Conserver au frais", "Couverts"),
-        "en": ("Delicate", "No", "Keep chilled", "Cutlery"),
+        "fr": ("Délicat", "Non", "Au frais", "Couverts"),
+        "en": ("Delicate", "No", "Chilled", "Cutlery"),
         "ja": ("壊れやすい", "不要", "冷蔵", "カトラリー"),
         "zh": ("易损", "不需要", "冷藏", "餐具"),
         "ko": ("다소 까다로움", "불필요", "냉장", "수저"),
     },
     "biscuit_roule": {
-        "fr": ("Délicat", "Non", "Conserver au frais", "Couverts"),
-        "en": ("Delicate", "No", "Keep chilled", "Cutlery"),
+        "fr": ("Délicat", "Non", "Au frais", "Couverts"),
+        "en": ("Delicate", "No", "Chilled", "Cutlery"),
         "ja": ("壊れやすい", "不要", "冷蔵", "カトラリー"),
         "zh": ("易损", "不需要", "冷藏", "餐具"),
         "ko": ("다소 까다로움", "불필요", "냉장", "수저"),
@@ -138,105 +140,105 @@ PRESETS: dict[str, dict[str, tuple[str, str, str, str]]] = {
     "viennoiserie": {
         "fr": (
             "Facile",
-            "Optionnel four",
+            "Optionnel",
             "Non",
             "À la main",
         ),
-        "en": ("Easy", "Optional (oven)", "No", "By hand"),
-        "ja": ("簡単", "任意（オーブン）", "不要", "手づかみ"),
-        "zh": ("容易", "可选烤箱", "否", "手抓"),
-        "ko": ("쉬움", "선택(오븐)", "아니오", "손으로"),
+        "en": ("Easy", "Optional", "No", "By hand"),
+        "ja": ("簡単", "任意", "不要", "手づかみ"),
+        "zh": ("容易", "可选", "否", "手抓"),
+        "ko": ("쉬움", "선택", "아니오", "손으로"),
     },
     "empanada": {
-        "fr": ("Facile", "Optionnel four", "Non", "À la main"),
-        "en": ("Easy", "Optional (oven)", "No", "By hand"),
-        "ja": ("簡単", "任意（オーブン）", "不要", "手づかみ"),
-        "zh": ("容易", "可选烤箱", "否", "手抓"),
-        "ko": ("쉬움", "선택(오븐)", "아니오", "손으로"),
+        "fr": ("Facile", "Optionnel", "Non", "À la main"),
+        "en": ("Easy", "Optional", "No", "By hand"),
+        "ja": ("簡単", "任意", "不要", "手づかみ"),
+        "zh": ("容易", "可选", "否", "手抓"),
+        "ko": ("쉬움", "선택", "아니오", "손으로"),
     },
     "onigiri_gimbap": {
         "fr": (
             "Facile",
-            "Optionnel micro-ondes",
-            "À manger frais ou à température ambiante selon garniture",
-            "À la main ou Baguettes",
+            "Optionnel",
+            "Frais ~ ambiant",
+            "À la main ~ Baguettes",
         ),
         "en": (
             "Easy",
-            "Optional microwave",
-            "Eat fresh or at room temperature depending on filling",
-            "By hand or chopsticks",
+            "Optional",
+            "Fresh ~ room temp",
+            "Hand ~ chopsticks",
         ),
         "ja": (
             "簡単",
-            "任意（電子レンジ）",
-            "具材に応じて冷蔵のまままたは常温で",
-            "手づかみまたは箸",
+            "任意",
+            "冷蔵 ~ 常温",
+            "手づかみ ~ 箸",
         ),
         "zh": (
             "容易",
-            "可选微波炉",
-            "视馅料冷藏或常温食用",
-            "手抓或筷子",
+            "可选",
+            "冷藏 ~ 常温",
+            "手抓 ~ 筷子",
         ),
         "ko": (
             "쉬움",
-            "선택(전자레인지)",
-            "속재료에 따라 냉장 또는 실온",
-            "손으로 또는 젓가락",
+            "선택",
+            "냉장 ~ 실온",
+            "손 ~ 젓가락",
         ),
     },
     "mandu": {
         "fr": (
             "Moyen",
-            "Recommandé vapeur ou micro-ondes",
-            "Conserver au frais si délai long",
-            "Baguettes ou Couverts",
+            "Recommandé vapeur ~ micro-ondes",
+            "Frais si délai",
+            "Baguettes ~ Couverts",
         ),
         "en": (
             "Medium",
-            "Recommended—steam or microwave",
-            "Keep chilled if long delay",
-            "Chopsticks or cutlery",
+            "Recommended steam ~ microwave",
+            "Chilled if delay",
+            "Chopsticks ~ cutlery",
         ),
         "ja": (
             "やや注意",
-            "推奨（蒸しまたは電子レンジ）",
-            "時間が空く場合は冷蔵",
-            "箸またはカトラリー",
+            "推奨 蒸し ~ 電子レンジ",
+            "遅延 ~ 冷蔵",
+            "箸 ~ カトラリー",
         ),
-        "zh": ("中等", "建议蒸或微波", "间隔较久需冷藏", "筷子或餐具"),
+        "zh": ("中等", "建议 蒸 ~ 微波", "久置 ~ 冷藏", "筷子 ~ 餐具"),
         "ko": (
             "보통",
-            "권장(찜 또는 전자레인지)",
-            "시간 간격이 길면 냉장",
-            "젓가락 또는 수저",
+            "권장 찜 ~ 전자레인지",
+            "지연 ~ 냉장",
+            "젓가락 ~ 수저",
         ),
     },
     "guacamole": {
         "fr": (
             "Moyen",
             "Non",
-            "Conserver au frais jusqu'à consommation",
+            "Au frais",
             "Couverts (tortillas à la main)",
         ),
         "en": (
             "Medium",
             "No",
-            "Keep chilled until eaten",
+            "Keep cold",
             "Cutlery (tortillas by hand)",
         ),
         "ja": (
             "やや注意",
             "不要",
-            "食べるまで冷蔵",
+            "要冷蔵",
             "カトラリー（トルティーヤは手づかみ）",
         ),
-        "zh": ("中等", "不需要", "食用前冷藏", "餐具（玉米饼可手抓）"),
+        "zh": ("中等", "不需要", "需冷藏", "餐具（玉米饼可手抓）"),
         "ko": (
             "보통",
             "불필요",
-            "먹을 때까지 냉장",
+            "냉장",
             "수저(또띠아는 손으로)",
         ),
     },
@@ -244,32 +246,32 @@ PRESETS: dict[str, dict[str, tuple[str, str, str, str]]] = {
         "fr": (
             "Moyen",
             "Recommandé tiède",
-            "Conserver au frais si délai long",
+            "Frais si délai",
             "Couverts",
         ),
         "en": (
             "Medium",
             "Recommended warm",
-            "Keep chilled if long delay",
+            "Chilled if delay",
             "Cutlery",
         ),
         "ja": (
             "やや注意",
             "温かいうちが望ましい",
-            "時間が空く場合は冷蔵",
+            "遅延 ~ 冷蔵",
             "カトラリー",
         ),
-        "zh": ("中等", "建议温热食用", "间隔较久需冷藏", "餐具"),
+        "zh": ("中等", "建议温热食用", "久置 ~ 冷藏", "餐具"),
         "ko": (
             "보통",
             "따뜻할 때 권장",
-            "시간 간격이 길면 냉장",
+            "지연 ~ 냉장",
             "수저",
         ),
     },
     "baba": {
-        "fr": ("Moyen", "Non", "Conserver au frais", "Couverts"),
-        "en": ("Medium", "No", "Keep chilled", "Cutlery"),
+        "fr": ("Moyen", "Non", "Au frais", "Couverts"),
+        "en": ("Medium", "No", "Chilled", "Cutlery"),
         "ja": ("やや注意", "不要", "冷蔵", "カトラリー"),
         "zh": ("中等", "不需要", "冷藏", "餐具"),
         "ko": ("보통", "불필요", "냉장", "수저"),
@@ -277,43 +279,43 @@ PRESETS: dict[str, dict[str, tuple[str, str, str, str]]] = {
     "blinis": {
         "fr": (
             "Moyen",
-            "Optionnel micro-ondes",
-            "Conserver au frais si garniture fraîche",
-            "Couverts ou à la main",
+            "Optionnel",
+            "Frais si garniture",
+            "Couverts ~ main",
         ),
         "en": (
             "Medium",
-            "Optional microwave",
-            "Keep chilled if using fresh toppings",
-            "Cutlery or by hand",
+            "Optional",
+            "Chilled if fresh toppings",
+            "Cutlery ~ hand",
         ),
         "ja": (
             "やや注意",
-            "任意（電子レンジ）",
+            "任意",
             "生のトッピングなら冷蔵",
-            "カトラリーまたは手づかみ",
+            "カトラリー ~ 手づかみ",
         ),
-        "zh": ("中等", "可选微波炉", "新鲜配料需冷藏", "餐具或手抓"),
+        "zh": ("中等", "可选", "新鲜配料需冷藏", "餐具 ~ 手抓"),
         "ko": (
             "보통",
-            "선택(전자레인지)",
+            "선택",
             "신선한 토핑이면 냉장",
-            "수저 또는 손으로",
+            "수저 ~ 손",
         ),
     },
     "naan": {
-        "fr": ("Facile", "Optionnel four ou poêle", "Non", "À la main"),
-        "en": ("Easy", "Optional (oven or pan)", "No", "By hand"),
-        "ja": ("簡単", "任意（オーブンまたはフライパン）", "不要", "手づかみ"),
-        "zh": ("容易", "可选烤箱或平底锅", "否", "手抓"),
-        "ko": ("쉬움", "선택(오븐 또는 프라이팬)", "아니오", "손으로"),
+        "fr": ("Facile", "Optionnel four ~ poêle", "Non", "À la main"),
+        "en": ("Easy", "Optional oven ~ pan", "No", "By hand"),
+        "ja": ("簡単", "任意 オーブン ~ フライパン", "不要", "手づかみ"),
+        "zh": ("容易", "可选 烤箱 ~ 平底锅", "否", "手抓"),
+        "ko": ("쉬움", "선택 오븐 ~ 프라이팬", "아니오", "손으로"),
     },
     "dan_bing": {
-        "fr": ("Facile", "Optionnel poêle", "Non", "À la main"),
-        "en": ("Easy", "Optional (pan)", "No", "By hand"),
-        "ja": ("簡単", "任意（フライパン）", "不要", "手づかみ"),
-        "zh": ("容易", "可选平底锅", "否", "手抓"),
-        "ko": ("쉬움", "선택(프라이팬)", "아니오", "손으로"),
+        "fr": ("Facile", "Optionnel", "Non", "À la main"),
+        "en": ("Easy", "Optional", "No", "By hand"),
+        "ja": ("簡単", "任意", "不要", "手づかみ"),
+        "zh": ("容易", "可选", "否", "手抓"),
+        "ko": ("쉬움", "선택", "아니오", "손으로"),
     },
 }
 
@@ -375,13 +377,16 @@ def has_bento_block(parts: list[str]) -> bool:
         return False
     if lines[0].startswith("Transport|"):
         return True
-    if 4 <= len(lines) <= 9 and all("|" not in ln for ln in lines):
+    if 4 <= len(lines) <= 10 and all("|" not in ln for ln in lines):
         return True
     return False
 
 
 def format_bento(lang: str, preset: str) -> str:
     t = PRESETS[preset][lang]
+    if len(t) == 4:
+        c = COVER_DEFAULT[lang]
+        t = (t[0], t[1], t[2], c, t[3])
     return "\n".join(t)
 
 

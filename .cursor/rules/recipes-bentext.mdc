@@ -26,29 +26,32 @@ Structure stricte, séparateurs `---` seuls sur une ligne :
 
 ### Section Bento : valeurs uniquement (fichier) / clés dans le JSON
 
-Métadonnées orientées **repas à emporter**. Dans le **fichier .bentext**, il n’y a **pas** de libellés (`Transport`, `Réchauffage`, etc.) : uniquement le **texte utile**, **dans un ordre fixe**, **entièrement traduit** dans chaque langue. L’API et le parseur associent les lignes aux champs JSON (`transport`, `reheat`, `cold`, `eating`, …).
+Métadonnées orientées **repas à emporter**. Dans le **fichier .bentext**, il n’y a **pas** de libellés (`Transport`, `Réchauffage`, etc.) : uniquement le **texte utile**, **dans un ordre fixe**, **entièrement traduit** dans chaque langue. L’API et le parseur associent les lignes aux champs JSON (`transport`, `reheat`, `cold`, `cover`, `eating`, `stains`, …).
 
-- **4 lignes obligatoires** (dans cet ordre) :
+- **5 lignes obligatoires** (dans cet ordre) :
   1. Facilité de transport (ex. `Facile`, `Moyen`, `Délicat` + courte précision si besoin)
-  2. Réchauffage : `Non`, `Optionnel`, `Recommandé`, `Obligatoire`, etc. (+ précision micro-ondes, four…)
-  3. Chaîne du froid / conservation : `Non`, `Conserver au frais jusqu’à consommation`, `À manger frais`, etc.
-  4. Modalité de consommation : `À la main`, `Baguettes`, `Couverts`, combinaison courte
+  2. Réchauffage : `Non`, `Optionnel`, `Recommandé`, etc. Pour **plusieurs modes** (vapeur ou micro-ondes, etc.), utiliser le séparateur **` ~ `** comme pour les alternatives d’ingrédients : ex. `Recommandé vapeur ~ micro-ondes` (pas de `|` dans le bloc Bento).
+  3. Chaîne du froid / conservation : formes **courtes** (`Non`, `Au frais`, `Frais si délai`, …). Pour **deux consignes** (froid / ambiant, etc.), séparateur **` ~ `** comme pour le réchauffage (ex. `Frais ~ ambiant`).
+  4. **Besoin de couvert** : `Non`, `Optionnel`, `Oui`, etc.
+  5. **Modalité de consommation** (hors couvert) : `À la main`, `Baguettes`, ou **deux options** avec **` ~ `** (ex. `Baguettes ~ Couverts`, `À la main ~ Baguettes`) — **ne pas** répéter « ou Couverts » ici si la ligne 4 est déjà `Optionnel` ou `Oui` : quand c’est pertinent **à la main** avec couverts possibles, ligne 4 = `Optionnel` et ligne 5 = `À la main` (pour tri / filtres côté app).
 - **Pas de caractère `|`** dans le bloc Bento (réservé aux ingrédients ailleurs).
 - Ton factuel, formulations courtes.
 
-**Lignes optionnelles** (après les 4 obligatoires ; **même nombre** et **même ordre** entre les fichiers de langue d’une même recette) :
+**Lignes optionnelles** (après les 5 obligatoires ; **même nombre** et **même ordre** entre les fichiers de langue d’une même recette) :
 
-| Rang (5→9) | Champ JSON | Rôle |
+| Rang (6→10) | Champ JSON | Rôle |
 |------------|------------|------|
-| 5 | `leaks` | Risque de fuite : `Faible`, `Moyen`, `Élevé` |
-| 6 | `smell` | Odeur en boîte fermée : `Discrète`, `Marquée` |
-| 7 | `prep_ahead` | Préparation la veille : `Oui`, `Partielle`, `Non` |
-| 8 | `holding` | Tenue après plusieurs heures : courte phrase |
-| 9 | `extra_notes` | Cas limite (mains grasses, lingette, etc.) |
+| 6 | `stains` | Risque de **taches** : `Non`, `Faible`, `Moyen`, `Élevé` |
+| 7 | `smell` | Odeur en boîte fermée : `Discrète`, `Marquée` |
+| 8 | `prep_time` | **Durée de préparation** (échelle) : `Rapide`, `Moyen`, `Long` |
+| 9 | `holding` | Tenue après plusieurs heures : courte phrase |
+| 10 | `extra_notes` | Cas limite (mains grasses, lingette, etc.) |
 
-**Ancien format** `Préfixe|valeur` (ex. `Transport|Facile`) : encore accepté par le parseur pour compatibilité, mais **ne plus utiliser** dans les nouvelles recettes ni en édition.
+**Ancien format** `Préfixe|valeur` (ex. `Transport|Facile`) : encore accepté par le parseur pour compatibilité, mais **ne plus utiliser** dans les nouvelles recettes ni en édition. Clés reconnues incluent `Couvert`, `Tâches`, `TempsPréparation` ; `Fuites` et `Veille` sont mappées vers `stains` / `prep_time`.
 
-**Recettes existantes** : compléter progressivement si besoin.
+**Recettes existantes** : référence sémantique **`*.fr.bentext`** pour le bloc Bento ; aligner les autres langues sur le même nombre de lignes.
+
+Référence API : [docs/api-bento.md](../../docs/api-bento.md).
 
 ## 2. Style d’écriture neutre et uniforme
 
@@ -76,4 +79,4 @@ Exemple de lissage :
 - [ ] Chaque nom d’ingrédient commence par une majuscule.
 - [ ] Étapes en impératif, neutres, sans « tu » / « on » inutiles.
 - [ ] Les 5 langues (fr, en, ja, zh, ko) sont présentes et alignées sur la recette.
-- [ ] Section **Bento** en **dernier** bloc (après les tags), **4 lignes de valeurs** minimum (sans `|`), optionnelles 5–9 alignées entre langues si utilisées.
+- [ ] Section **Bento** en **dernier** bloc (après les tags), **5 lignes de valeurs** minimum (sans `|`), optionnelles 6–10 alignées entre langues si utilisées.

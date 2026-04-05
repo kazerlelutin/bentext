@@ -36,18 +36,21 @@ type RecipeImage struct {
 	Height int    `json:"height"`
 }
 
-// Bento holds key|value lines from the optional section after tags (transport, reheat, cold chain, how to eat, etc.).
+// Bento holds lunch-box metadata (optional section after tags).
 // JSON field names are English; values stay as in the source file (per language).
+// Lines in value-only files (5–10 lines, fixed order): transport, reheat, cold, cover, eating,
+// stains, smell, prep_time, holding, extra_notes.
 type Bento struct {
 	Transport  string `json:"transport,omitempty"`
-	Reheat     string `json:"reheat,omitempty"`      // Réchauffage
-	Cold       string `json:"cold,omitempty"`        // Froid
-	Eating     string `json:"eating,omitempty"`      // Manger
-	Leaks      string `json:"leaks,omitempty"`       // Fuites
-	Smell      string `json:"smell,omitempty"`       // Odeur
-	PrepAhead  string `json:"prep_ahead,omitempty"`  // Veille
-	Holding    string `json:"holding,omitempty"`     // Tenue
-	ExtraNotes string `json:"extra_notes,omitempty"` // Notes (préfixe Notes| dans la section bento)
+	Reheat     string `json:"reheat,omitempty"`
+	Cold       string `json:"cold,omitempty"`
+	Cover      string `json:"cover,omitempty"`       // Besoin de couvert
+	Eating     string `json:"eating,omitempty"`      // Modalité (hors couvert)
+	Stains     string `json:"stains,omitempty"`      // Risque de taches
+	Smell      string `json:"smell,omitempty"`       // Odeur en boîte
+	PrepTime   string `json:"prep_time,omitempty"`   // Temps de préparation (échelle)
+	Holding    string `json:"holding,omitempty"`     // Tenue après plusieurs heures
+	ExtraNotes string `json:"extra_notes,omitempty"` // Notes libres
 }
 
 type Recipe struct {

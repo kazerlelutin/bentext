@@ -2,7 +2,7 @@
 
 HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** (`.bentext`) plain-text format.
 
-[![Support on Ko-fi](https://img.shields.io/badge/Ko--fi-Support%20me-ff5f5f?logo=kofi&logoColor=white)](https://ko-fi.com/kazerlelutin)
+[Support on Ko-fi](https://ko-fi.com/kazerlelutin)
 
 ## Run the API
 
@@ -10,33 +10,35 @@ HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** (
 go run ./cmd/api
 ```
 
-Server listens on **http://localhost:8080**.
+Server listens on **[http://localhost:8080](http://localhost:8080)**.
 
 ## Endpoints
 
 `GET /` returns a JSON **index** with the full list of routes and query variants (same information as summarized below).
 
-| Method | Route | Description |
-| ------ | ----- | ----------- |
-| GET | `/` | Route catalog (JSON) |
-| GET | `/health` | Health check |
-| GET | `/public/` | Static files (recipe images, etc.) |
-| GET | `/api/recipes` | All recipes as JSON |
-| GET | `/api/recipes?lang=fr` | Filter by language (`fr`, `en`, `ja`, `zh`, `ko`) |
-| GET | `/api/recipes?bentext=true` or `?include=bentext` | Same JSON plus raw file in `bentext` (alongside parsed fields, including `identity`) |
-| GET | `/api/recipes/{lang}/{slug}` | One recipe, e.g. `/api/recipes/fr/banana-cake` |
-| GET | `/api/recipes/{lang}/{slug}?format=json` | Explicit JSON (default if `format` is omitted) |
-| GET | `/api/recipes/{lang}/{slug}?format=bentext` | Raw `.bentext` as `text/plain; charset=utf-8` |
-| GET | `/api/recipes/{lang}/{slug}?bentext=true` | JSON with an extra `bentext` field (full source) |
-| POST | `/api/convert/bentxt` | Body = bentxt text → JSON. Optional query: `lang`, `slug` |
-| GET | `/api/ingredients/lookup` | Ingredient icon lookup (`?q=name`) |
-| GET | `/api/ingredients/sprite` | Sprite sheet URL and coordinates |
+
+| Method | Route                                             | Description                                                                          |
+| ------ | ------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| GET    | `/`                                               | Route catalog (JSON)                                                                 |
+| GET    | `/health`                                         | Health check                                                                         |
+| GET    | `/public/`                                        | Static files (recipe images, etc.)                                                   |
+| GET    | `/api/recipes`                                    | All recipes as JSON                                                                  |
+| GET    | `/api/recipes?lang=fr`                            | Filter by language (`fr`, `en`, `ja`, `zh`, `ko`)                                    |
+| GET    | `/api/recipes?bentext=true` or `?include=bentext` | Same JSON plus raw file in `bentext` (alongside parsed fields, including `identity`) |
+| GET    | `/api/recipes/{lang}/{slug}`                      | One recipe, e.g. `/api/recipes/fr/banana-cake`                                       |
+| GET    | `/api/recipes/{lang}/{slug}?format=json`          | Explicit JSON (default if `format` is omitted)                                       |
+| GET    | `/api/recipes/{lang}/{slug}?format=bentext`       | Raw `.bentext` as `text/plain; charset=utf-8`                                        |
+| GET    | `/api/recipes/{lang}/{slug}?bentext=true`         | JSON with an extra `bentext` field (full source)                                     |
+| POST   | `/api/convert/bentxt`                             | Body = bentxt text → JSON. Optional query: `lang`, `slug`                            |
+| GET    | `/api/ingredients/lookup`                         | Ingredient icon lookup (`?q=name`)                                                   |
+| GET    | `/api/ingredients/sprite`                         | Sprite sheet URL and coordinates                                                     |
+
 
 Invalid `format` on a single-recipe request returns **400**; unknown `lang`/`slug` or bad path returns **404**.
 
 ## Recipe images
 
-Place images in **`public/`**. The file base name must match the recipe **without** the language suffix:
+Place images in `**public/`**. The file base name must match the recipe **without** the language suffix:
 
 - Recipe: `recipes/onigiri-kimchi-mozza.fr.bentext` → `public/onigiri-kimchi-mozza.jpg` (or `.png`, `.gif`)
 
@@ -83,20 +85,24 @@ Files are split into **sections** by a line containing only `---` (three hyphens
 
 **Minimum:** identity, ingredients, steps.
 
-**Optional after steps:** notes (conseils), **tags**, then a **bento** block: **one value per line**, **no labels and no `|`** in that block. Lines are **fully translated** per language file. The API maps them to JSON keys (`transport`, `reheat`, `cold`, `eating`, …). **Order is fixed** (see below). Legacy lines `Préfixe|valeur` (e.g. `Transport|…`) are still accepted by the parser but should not be used in new content.
+**Optional after steps:** notes (conseils), **tags**, then a **bento** block: **one value per line**, **no labels and no `|`** in that block. Lines are **fully translated** per language file. The API maps them to JSON keys (`transport`, `reheat`, `cold`, `cover`, `eating`, …). **Order is fixed** (see below). Legacy lines `Préfixe|valeur` (e.g. `Transport|…`) are still accepted by the parser but should not be used in new content.
+
+**API — bloc Bento :** schéma détaillé et tableaux de correspondance multilingue des valeurs standard : [docs/api-bento.md](docs/api-bento.md).
 
 ### Section order
 
-| Index | Content | Required |
-| ----- | ------- | -------- |
-| 0 | Identity (3 lines: name, servings number, description) | yes |
-| 1 | Ingredients | yes |
-| 2 | Steps | yes |
-| 3 | Notes (conseils) | no |
-| 4 | Tags | no |
-| 5 | Bento (repas emporté) | no |
 
-The **last** section is treated as **bento** when it matches the legacy `Préfixe|valeur` format, or when it has **4–9 non-empty lines with no `|`** (value-only). Otherwise the last section is **tags**, and earlier tail sections are **notes** (or tags + bento as in the examples). When there are only two tail sections, the first block is classified as **tags** vs **notes** using simple heuristics (length, word count, punctuation).
+| Index | Content                                                | Required |
+| ----- | ------------------------------------------------------ | -------- |
+| 0     | Identity (3 lines: name, servings number, description) | yes      |
+| 1     | Ingredients                                            | yes      |
+| 2     | Steps                                                  | yes      |
+| 3     | Notes (conseils)                                       | no       |
+| 4     | Tags                                                   | no       |
+| 5     | Bento (repas emporté)                                  | no       |
+
+
+The **last** section is treated as **bento** when it matches the legacy `Préfixe|valeur` format, or when it has **4–10 non-empty lines with no `|`** (value-only; **5–10** lines is the current lunch-box model). Otherwise the last section is **tags**, and earlier tail sections are **notes** (or tags + bento as in the examples). When there are only two tail sections, the first block is classified as **tags** vs **notes** using simple heuristics (length, word count, punctuation).
 
 Examples of block counts (identity + ingredients + steps + …):
 
@@ -107,8 +113,8 @@ Examples of block counts (identity + ingredients + steps + …):
 
 ### Section 0 – Identity
 
-1. Recipe name  
-2. Servings (integer)  
+1. Recipe name
+2. Servings (integer)
 3. Description (one line in typical files; the parser consumes further identity lines with the existing rules)
 
 ### Section 1 – Ingredients
@@ -129,7 +135,7 @@ One step per line.
 
 ### Section 5 – Bento (optional)
 
-**4 required lines** (in order): transport ease, reheating, cold chain / storage, how to eat. **Optional lines 5–9** (same order if used): leaks, smell, prep-ahead, holding, extra note (maps to JSON `extra_notes`, not recipe **notes**). Do not use `|` in this section.
+**5 required lines** (in order): transport ease, reheating, cold chain / storage, **cutlery need** (`cover`), **how to eat** without conflating with cover (e.g. by hand, chopsticks). **Optional lines 6–10** (same order if used): stain risk (`stains`), smell in a closed box, **prep time scale** (`prep_time`), holding quality after several hours, extra note (JSON `extra_notes`, not recipe **notes**). Do not use `|` in this section.
 
 ### Example `.bentext` file
 
@@ -158,46 +164,53 @@ baking
 sweet
 ---
 Easy
-Optional (oven or microwave)
+Optional oven ~ microwave
 No
-By hand or cutlery
+Optional
+By hand
 ```
 
 ## JSON shape (parsed recipe)
 
 Returned by `GET /api/recipes`, `GET /api/recipes/{lang}/{slug}` (JSON mode), and `POST /api/convert/bentxt`:
 
-| Field | Type | Notes |
-| ----- | ---- | ----- |
-| `slug` | string | Derived from filename |
-| `lang` | string | `fr`, `en`, `ja`, `zh`, `ko`, … |
-| `identity` | object | `name`, `servings`, `description` |
-| `ingredients` | array | `name`, `quantity`, `unit`, `note?`, `alternatives[]`, `icon?` |
-| `steps` | string[] | |
-| `notes` | string[] | Conseils |
-| `tags` | string[] | |
-| `bento` | object? | Omitted if absent in file |
-| `image` | object? | `url`, `width`, `height` |
-| `bentext` | string? | Only when `?bentext=true` or `?include=bentext` |
 
-**`bento`** (when present): fields are filled from **line order** in the file (or from legacy `Préfixe|valeur` lines if present).
+| Field         | Type     | Notes                                                          |
+| ------------- | -------- | -------------------------------------------------------------- |
+| `slug`        | string   | Derived from filename                                          |
+| `lang`        | string   | `fr`, `en`, `ja`, `zh`, `ko`, …                                |
+| `identity`    | object   | `name`, `servings`, `description`                              |
+| `ingredients` | array    | `name`, `quantity`, `unit`, `note?`, `alternatives[]`, `icon?` |
+| `steps`       | string[] |                                                                |
+| `notes`       | string[] | Conseils                                                       |
+| `tags`        | string[] |                                                                |
+| `bento`       | object?  | Omitted if absent in file                                      |
+| `image`       | object?  | `url`, `width`, `height`                                       |
+| `bentext`     | string?  | Only when `?bentext=true` or `?include=bentext`                |
 
-| JSON field | Source line (value-only file) |
-| ---------- | ------------------------------ |
-| `transport` | line 1 |
-| `reheat` | line 2 |
-| `cold` | line 3 |
-| `eating` | line 4 |
-| `leaks` | line 5 (optional) |
-| `smell` | line 6 (optional) |
-| `prep_ahead` | line 7 (optional) |
-| `holding` | line 8 (optional) |
-| `extra_notes` | line 9 (optional) |
+
+`**bento**` (when present): fields are filled from **line order** in the file (or from legacy `Préfixe|valeur` lines if present). See [docs/api-bento.md](docs/api-bento.md) for canonical value sets per language.
+
+
+| JSON field    | Source line (value-only file) |
+| ------------- | ----------------------------- |
+| `transport`   | line 1                        |
+| `reheat`      | line 2                        |
+| `cold`        | line 3                        |
+| `cover`       | line 4                        |
+| `eating`      | line 5                        |
+| `stains`      | line 6 (optional)             |
+| `smell`       | line 7 (optional)             |
+| `prep_time`   | line 8 (optional)             |
+| `holding`     | line 9 (optional)             |
+| `extra_notes` | line 10 (optional)            |
+
 
 ## Features
 
-- **CORS:** `Access-Control-Allow-Origin: *` on all routes  
-- **Rate limiting:** 100 requests per minute per IP (429 when exceeded)
+- **CORS:** `Access-Control-Allow-Origin:` * on all routes  
+- **Rate limiting:** 100 requests per minute per IP (429 when exceeded)  
+- **Bento (lunch box) metadata:** [docs/api-bento.md](docs/api-bento.md)
 
 ## Build
 
@@ -213,13 +226,16 @@ bentext/
 ├── cmd/
 │   ├── api/            # HTTP server entrypoint
 │   └── check-recipes/  # CLI: language coverage per recipe slug
+├── docs/               # API docs (e.g. Bento field map)
 ├── internal/
+│   ├── bento/          # Canonical vocabulary rows (doc alignment)
 │   ├── handler/        # HTTP handlers (recipes, convert, ingredients, …)
 │   ├── recipe/         # Bentxt parsing (identity … bento)
 │   └── ingredients/    # Icon lookup & sprite metadata
 ├── public/             # Static assets (recipe images)
 ├── recipes/            # *.bentext (e.g. *.fr.bentext)
-├── scripts/            # Optional tooling (e.g. batch edits)
+├── scripts/            # Optional tooling (e.g. batch edits, migrate_bento_v2.py)
 ├── go.mod
 └── README.md
 ```
+

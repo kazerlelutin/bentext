@@ -22,7 +22,6 @@ func Parse(content string, slug string, lang string) *Recipe {
 		Ingredients: []Ingredient{},
 		Steps:       []string{},
 		Notes:       []string{},
-		Tags:        []string{},
 	}
 
 	for _, line := range nonEmptyLines(parts[0]) {
@@ -70,8 +69,8 @@ func nonEmptyLines(block string) []string {
 
 // knownBentoKeys are legacy line prefixes (Préfixe|valeur) still accepted when reading old files.
 var knownBentoKeys = map[string]struct{}{
-	"Transport": {}, "Réchauffage": {}, "Froid": {}, "Manger": {},
-	"Fuites": {}, "Odeur": {}, "Veille": {}, "Tenue": {}, "Notes": {},
+	"Transport": {}, "Réchauffage": {}, "Froid": {}, "Couvert": {}, "Manger": {},
+	"Tâches": {}, "Fuites": {}, "Odeur": {}, "TempsPréparation": {}, "Veille": {}, "Tenue": {}, "Notes": {},
 }
 
 func isLegacyBentoSection(section string) bool {
@@ -87,11 +86,12 @@ func isLegacyBentoSection(section string) bool {
 	return false
 }
 
-// valueOnlyBentoShape: 4–9 lines, aucun '|' (les libellés sont uniquement dans le JSON).
+// valueOnlyBentoShape: 5–10 lines, aucun '|' (les libellés sont uniquement dans le JSON).
+// Ancien format 4–9 lignes (sans couvert) : détecté et parsé par parseValueOnlyBentoLines.
 func valueOnlyBentoShape(section string) bool {
 	lines := nonEmptyLines(section)
 	n := len(lines)
-	if n < 4 || n > 9 {
+	if n < 4 || n > 10 {
 		return false
 	}
 	for _, l := range lines {
@@ -99,7 +99,8 @@ func valueOnlyBentoShape(section string) bool {
 			return false
 		}
 	}
-	return true
+	// Nouveau : 5–10 lignes ; ancien : 4–9 lignes (4 lignes de base sans cover).
+	return n >= 4 && n <= 10
 }
 
 func isBentoBlock(section string) bool {
@@ -205,14 +206,20 @@ func parseBentoBlock(section string) *Bento {
 				b.Reheat = val
 			case "Froid":
 				b.Cold = val
+			case "Couvert":
+				b.Cover = val
 			case "Manger":
 				b.Eating = val
-			case "Fuites":
-				b.Leaks = val
+			case "Tâches":
+				b.Stains = val
+			case "Fuites": // legacy → stains
+				b.Stains = val
 			case "Odeur":
 				b.Smell = val
-			case "Veille":
-				b.PrepAhead = val
+			case "TempsPréparation":
+				b.PrepTime = val
+			case "Veille": // legacy → prep_time semantic migration in files
+				b.PrepTime = val
 			case "Tenue":
 				b.Holding = val
 			case "Notes":
@@ -221,43 +228,145 @@ func parseBentoBlock(section string) *Bento {
 		}
 		return b
 	}
-	// Valeurs seules, ordre fixe : transport, réchauffage, froid, manger, puis optionnels Fuites… Notes.
-	if len(lines) >= 1 {
+	return parseValueOnlyBentoLines(lines, b)
+}
+
+// parseValueOnlyBentoLines remplit b à partir de lignes sans préfixe.
+// Nouveau format (5–10 lignes) : transport, reheat, cold, cover, eating, stains, smell, prep_time, holding, extra_notes.
+// Ancien format (4 lignes) : transport, reheat, cold, eating (sans cover).
+// Ancien format (5–9 lignes) : + leaks, smell, prep_ahead, holding, extra_notes (sans cover ligne dédiée).
+func parseValueOnlyBentoLines(lines []string, b *Bento) *Bento {
+	n := len(lines)
+	if n == 4 {
+		// Legacy 4-line base
+		b.Transport = lines[0]
+		b.Reheat = lines[1]
+		b.Cold = lines[2]
+		b.Eating = lines[3]
+		return b
+	}
+	if n >= 5 && isLegacyValueOnlyBentoWithoutCover(lines) {
+		parseLegacyValueOnlyBento5to9(lines, b)
+		return b
+	}
+	// New format 5–10
+	if n >= 1 {
 		b.Transport = lines[0]
 	}
-	if len(lines) >= 2 {
+	if n >= 2 {
 		b.Reheat = lines[1]
 	}
-	if len(lines) >= 3 {
+	if n >= 3 {
 		b.Cold = lines[2]
 	}
-	if len(lines) >= 4 {
-		b.Eating = lines[3]
+	if n >= 4 {
+		b.Cover = lines[3]
 	}
-	if len(lines) >= 5 {
-		b.Leaks = lines[4]
+	if n >= 5 {
+		b.Eating = lines[4]
 	}
-	if len(lines) >= 6 {
-		b.Smell = lines[5]
+	if n >= 6 {
+		b.Stains = lines[5]
 	}
-	if len(lines) >= 7 {
-		b.PrepAhead = lines[6]
+	if n >= 7 {
+		b.Smell = lines[6]
 	}
-	if len(lines) >= 8 {
-		b.Holding = lines[7]
+	if n >= 8 {
+		b.PrepTime = lines[7]
 	}
-	if len(lines) >= 9 {
-		b.ExtraNotes = lines[8]
+	if n >= 9 {
+		b.Holding = lines[8]
+	}
+	if n >= 10 {
+		b.ExtraNotes = lines[9]
 	}
 	return b
+}
+
+// isLegacyValueOnlyBentoWithoutCover heuristique : ancien 5–9 lignes où la 4e ligne ressemble à
+// "manger" (modalité) et pas à un besoin de couvert court (Non/Oui/Optionnel seuls).
+func isLegacyValueOnlyBentoWithoutCover(lines []string) bool {
+	n := len(lines)
+	if n < 5 || n > 9 {
+		return false
+	}
+	// Nouveau format 5 lignes : ligne 4 = cover (souvent Non, Optionnel, Oui) et ligne 5 = eating.
+	// Ancien 5 lignes : ligne 4 = eating (phrases longues souvent), ligne 5 = fuites.
+	if n == 5 {
+		l4 := strings.TrimSpace(lines[3])
+		lower := strings.ToLower(l4)
+		// Si ligne 4 est uniquement un niveau couvert court, c’est le nouveau format.
+		if isShortCoverToken(l4, lower) {
+			return false
+		}
+		return true
+	}
+	// 6–9 lignes : ancien format avait au plus 9 lignes sans cover ; nouveau en a 6–10.
+	// Si 6 lignes : nouveau = cover+eating+stains ; ancien = eating+leaks+smell.
+	if n == 6 {
+		l4 := strings.TrimSpace(lines[3])
+		lower := strings.ToLower(l4)
+		if isShortCoverToken(l4, lower) {
+			return false
+		}
+		return true
+	}
+	// 7–9 : ancien format (pas de cover) — toujours legacy si pas de token court en ligne 4
+	if n >= 7 && n <= 9 {
+		l4 := strings.TrimSpace(lines[3])
+		lower := strings.ToLower(l4)
+		if isShortCoverToken(l4, lower) {
+			return false
+		}
+		return true
+	}
+	return false
+}
+
+func isShortCoverToken(l4, lower string) bool {
+	if len(l4) > 24 {
+		return false
+	}
+	switch lower {
+	case "non", "oui", "optionnel", "no", "yes", "optional":
+		return true
+	}
+	switch l4 {
+	case "不要", "任意", "必要", "不需要", "可选", "需要", "불필요", "선택", "필요":
+		return true
+	}
+	return false
+}
+
+func parseLegacyValueOnlyBento5to9(lines []string, b *Bento) {
+	n := len(lines)
+	b.Transport = lines[0]
+	b.Reheat = lines[1]
+	b.Cold = lines[2]
+	b.Eating = lines[3]
+	if n >= 5 {
+		b.Stains = lines[4] // was leaks
+	}
+	if n >= 6 {
+		b.Smell = lines[5]
+	}
+	if n >= 7 {
+		b.PrepTime = lines[6] // was prep_ahead
+	}
+	if n >= 8 {
+		b.Holding = lines[7]
+	}
+	if n >= 9 {
+		b.ExtraNotes = lines[8]
+	}
 }
 
 func (b *Bento) isEmpty() bool {
 	if b == nil {
 		return true
 	}
-	return b.Transport == "" && b.Reheat == "" && b.Cold == "" && b.Eating == "" &&
-		b.Leaks == "" && b.Smell == "" && b.PrepAhead == "" && b.Holding == "" && b.ExtraNotes == ""
+	return b.Transport == "" && b.Reheat == "" && b.Cold == "" && b.Cover == "" && b.Eating == "" &&
+		b.Stains == "" && b.Smell == "" && b.PrepTime == "" && b.Holding == "" && b.ExtraNotes == ""
 }
 
 func parseIdentity(r *Recipe, line string) {
