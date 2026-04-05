@@ -47,6 +47,8 @@ Métadonnées orientées **repas à emporter**. Dans le **fichier .bentext**, il
 | 9 | `holding` | Tenue après plusieurs heures : courte phrase |
 | 10 | `extra_notes` | Cas limite (mains grasses, lingette, etc.) |
 
+Remplir ces lignes **lorsque c’est pertinent** pour l’usage bento (risque de taches, odeur, échelle de préparation, tenue, astuce). Les recettes du dépôt visent **jusqu’à 10 lignes** quand une valeur claire existe dans chaque langue ; aligner strictement le nombre de lignes entre langues.
+
 **Ancien format** `Préfixe|valeur` (ex. `Transport|Facile`) : encore accepté par le parseur pour compatibilité, mais **ne plus utiliser** dans les nouvelles recettes ni en édition. Clés reconnues incluent `Couvert`, `Tâches`, `TempsPréparation` ; `Fuites` et `Veille` sont mappées vers `stains` / `prep_time`.
 
 **Recettes existantes** : référence sémantique **`*.fr.bentext`** pour le bloc Bento ; aligner les autres langues sur le même nombre de lignes.
