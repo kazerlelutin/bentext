@@ -38,14 +38,13 @@ type RecipeImage struct {
 
 // Bento holds lunch-box metadata (optional section after tags).
 // JSON field names are English; values stay as in the source file (per language).
-// Lines in value-only files (5–10 lines, fixed order): transport, reheat, cold, cover, eating,
-// stains, smell, prep_time, holding, extra_notes.
+// Lines in value-only files (4–9 lines, fixed order): transport, reheat, cold, utensils,
+// stains, smell, prep_time, holding, extra_notes. Utensils fusionne besoin de couverts + modalité.
 type Bento struct {
 	Transport  string `json:"transport,omitempty"`
 	Reheat     string `json:"reheat,omitempty"`
 	Cold       string `json:"cold,omitempty"`
-	Cover      string `json:"cover,omitempty"`       // Besoin de couvert
-	Eating     string `json:"eating,omitempty"`      // Modalité (hors couvert)
+	Utensils   string `json:"utensils,omitempty"`      // Couverts / comment manger (fusion ancien cover+eating)
 	Stains     string `json:"stains,omitempty"`      // Risque de taches
 	Smell      string `json:"smell,omitempty"`       // Odeur en boîte
 	PrepTime   string `json:"prep_time,omitempty"`   // Temps de préparation (échelle)

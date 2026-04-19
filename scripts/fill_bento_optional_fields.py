@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Ajoute les lignes Bento optionnelles 6–10 (stains, smell, prep_time, holding, extra_notes) si absentes."""
+"""Ajoute les lignes Bento optionnelles 5–9 (stains, smell, prep_time, holding, extra_notes) si absentes."""
 
 from __future__ import annotations
 
@@ -458,7 +458,7 @@ def append_optional(path: Path, slug: str) -> bool:
     if not rows or lang not in rows:
         return False
     text = path.read_text(encoding="utf-8")
-    if bento_line_count(text) != 5:
+    if bento_line_count(text) != 4:
         return False
     extra = "\n".join(rows[lang])
     # Retirer tout saut de ligne final du fichier puis ajouter bento

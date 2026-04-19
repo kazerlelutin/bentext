@@ -85,7 +85,7 @@ Files are split into **sections** by a line containing only `---` (three hyphens
 
 **Minimum:** identity, ingredients, steps.
 
-**Optional after steps:** notes (conseils), **tags**, then a **bento** block: **one value per line**, **no labels and no `|`** in that block. Lines are **fully translated** per language file. The API maps them to JSON keys (`transport`, `reheat`, `cold`, `cover`, `eating`, …). **Order is fixed** (see below). Legacy lines `Préfixe|valeur` (e.g. `Transport|…`) are still accepted by the parser but should not be used in new content.
+**Optional after steps:** notes (conseils), **tags**, then a **bento** block: **one value per line**, **no labels and no `|`** in that block. Lines are **fully translated** per language file. The API maps them to JSON keys (`transport`, `reheat`, `cold`, `utensils`, …). **Order is fixed** (see below). Legacy lines `Préfixe|valeur` (e.g. `Transport|…`) are still accepted by the parser but should not be used in new content.
 
 **API — bloc Bento :** schéma détaillé et tableaux de correspondance multilingue des valeurs standard : [docs/api-bento.md](docs/api-bento.md).
 
@@ -102,7 +102,7 @@ Files are split into **sections** by a line containing only `---` (three hyphens
 | 5     | Bento (repas emporté)                                  | no       |
 
 
-The **last** section is treated as **bento** when it matches the legacy `Préfixe|valeur` format, or when it has **4–10 non-empty lines with no `|`** (value-only; **5–10** lines is the current lunch-box model). Otherwise the last section is **tags**, and earlier tail sections are **notes** (or tags + bento as in the examples). When there are only two tail sections, the first block is classified as **tags** vs **notes** using simple heuristics (length, word count, punctuation).
+The **last** section is treated as **bento** when it matches the legacy `Préfixe|valeur` format, or when it has **4–10 non-empty lines with no `|`** (value-only; **4–9** lines is the current lunch-box model). Otherwise the last section is **tags**, and earlier tail sections are **notes** (or tags + bento as in the examples). When there are only two tail sections, the first block is classified as **tags** vs **notes** using simple heuristics (length, word count, punctuation).
 
 Examples of block counts (identity + ingredients + steps + …):
 
@@ -135,7 +135,7 @@ One step per line.
 
 ### Section 5 – Bento (optional)
 
-**5 required lines** (in order): transport ease, reheating, cold chain / storage, **cutlery need** (`cover`), **how to eat** without conflating with cover (e.g. by hand, chopsticks). **Optional lines 6–10** (same order if used): stain risk (`stains`), smell in a closed box, **prep time scale** (`prep_time`), holding quality after several hours, extra note (JSON `extra_notes`, not recipe **notes**). Do not use `|` in this section.
+**4 required lines** (in order): transport ease, reheating, cold chain / storage, **utensils** (cutlery need and how to eat in **one** line, e.g. by hand, chopsticks, `hand ~ cutlery`). **Optional lines 5–9** (same order if used): stain risk (`stains`), smell in a closed box, **prep time scale** (`prep_time`), holding quality after several hours, extra note (JSON `extra_notes`, not recipe **notes**). Do not use `|` in this section.
 
 ### Example `.bentext` file
 
@@ -166,8 +166,7 @@ sweet
 Easy
 Optional oven ~ microwave
 No
-Optional
-By hand
+By hand ~ cutlery
 ```
 
 ## JSON shape (parsed recipe)
@@ -197,13 +196,12 @@ Returned by `GET /api/recipes`, `GET /api/recipes/{lang}/{slug}` (JSON mode), an
 | `transport`   | line 1                        |
 | `reheat`      | line 2                        |
 | `cold`        | line 3                        |
-| `cover`       | line 4                        |
-| `eating`      | line 5                        |
-| `stains`      | line 6 (optional)             |
-| `smell`       | line 7 (optional)             |
-| `prep_time`   | line 8 (optional)             |
-| `holding`     | line 9 (optional)             |
-| `extra_notes` | line 10 (optional)            |
+| `utensils`    | line 4                        |
+| `stains`      | line 5 (optional)             |
+| `smell`       | line 6 (optional)             |
+| `prep_time`   | line 7 (optional)             |
+| `holding`     | line 8 (optional)             |
+| `extra_notes` | line 9 (optional)             |
 
 
 ## Features

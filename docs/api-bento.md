@@ -11,27 +11,25 @@ Les chaînes sont **localisées** comme dans le fichier source (une langue par f
 | `transport` | `string` | 1 | Facilité de transport (souvent une échelle + courte précision) |
 | `reheat` | `string` | 2 | Réchauffage (échelle + détail). Plusieurs modes possibles : même idée que les **alternatives d’ingrédients**, séparer avec **` ~ `** (ex. `Recommandé vapeur ~ micro-ondes`). |
 | `cold` | `string` | 3 | Conservation au froid / chaîne du froid. Alternatives (ex. froid / ambiant, délai) : **` ~ `** comme pour le réchauffage. |
-| `cover` | `string` | 4 | Besoin de couvert (couverts) |
-| `eating` | `string` | 5 | Modalité **sans** redire le besoin de couvert (main, baguettes, etc.) |
-| `stains` | `string` | 6 (optionnel) | Risque de taches |
-| `smell` | `string` | 7 (optionnel) | Odeur probable en boîte fermée |
-| `prep_time` | `string` | 8 (optionnel) | Échelle de **durée de préparation** (remplace l’ancienne « préparation la veille ») |
-| `holding` | `string` | 9 (optionnel) | Tenue après plusieurs heures |
-| `extra_notes` | `string` | 10 (optionnel) | Notes libres (cas limites) |
+| `utensils` | `string` | 4 | **Ustensiles / modalité** : faut-il des couverts, lesquels (main, baguettes, couverts, combinaisons avec **` ~ `**). Remplace l’ancienne paire `cover` + `eating`. |
+| `stains` | `string` | 5 (optionnel) | Risque de taches |
+| `smell` | `string` | 6 (optionnel) | Odeur probable en boîte fermée |
+| `prep_time` | `string` | 7 (optionnel) | Échelle de **durée de préparation** |
+| `holding` | `string` | 8 (optionnel) | Tenue après plusieurs heures |
+| `extra_notes` | `string` | 9 (optionnel) | Notes libres (cas limites) |
 
-**Bloc fichier :** 5 lignes minimum (sans `|`), jusqu’à 10 lignes. Même nombre de lignes et même ordre entre les fichiers de langue d’une même recette.
+**Bloc fichier :** **4 lignes minimum** (sans `|`), jusqu’à **9 lignes**. Même nombre de lignes et même ordre entre les fichiers de langue d’une même recette.
 
 **Réchauffage (`reheat`) :** pour lister des **alternatives** (vapeur, four, micro-ondes, etc.), utiliser le séparateur **` ~ `** comme entre ingrédients (`a ~ b`), éventuellement après un mot d’échelle (`Optionnel`, `Recommandé`, …). Le parseur n’interdit pas `~` dans le bloc Bento (seul `|` est réservé aux ingrédients).
 
 **Froid (`cold`) :** formes **courtes** (ex. `Au frais`, `Frais si délai`, `Chilled if delay`). Pour **deux consignes équivalentes** (ex. froid / ambiant selon garniture), utiliser aussi **` ~ `** (ex. `Frais ~ ambiant`, `Fresh ~ room temp`).
 
-**Couvert (`cover`) et modalité (`eating`) :** quand la consommation peut se faire **à la main** alors que les couverts restent possibles, mettre **`cover` = Optionnel** (ou **Non** si les couverts ne sont jamais nécessaires) et **`eating` = « À la main »** (et équivalents), **sans** écrire « À la main ou Couverts » sur la ligne `eating`. Le besoin de couvert est entièrement porté par `cover`, ce qui permet de **trier et filtrer** (ex. toutes les fiches avec couverts optionnels) sans ambiguïté.
+**Ustensiles (`utensils`) :** une seule ligne qui combine besoin de couverts et modalité (ex. `À la main ~ Couverts`, `Baguettes ~ Couverts`, `À la main`). Pour **deux options** équivalentes, utiliser **` ~ `** (même convention que les ingrédients et le réchauffage).
 
 ## Intégration front
 
 - **Affichage direct :** tout champ peut être rendu tel quel pour l’UI dans la langue courante.
-- **Échelles / badges :** pour `transport`, `cover`, `stains`, `smell`, `prep_time`, comparer la chaîne reçue aux lignes du tableau de correspondance (ou normaliser par `Key` si vous dupliquez la table en TypeScript).
-- **Filtres :** `cover` à **Optionnel** + `eating` centrée sur la main couvre le cas « main ou couverts » sans dupliquer l’information.
+- **Échelles / badges :** pour `transport`, `utensils`, `stains`, `smell`, `prep_time`, comparer la chaîne reçue aux lignes du tableau de correspondance (ou normaliser par `Key` si vous dupliquez la table en TypeScript).
 - **Évolutions :** des codes normalisés additionnels (ex. `transport_ease`) pourraient compléter les chaînes plus tard ; le contrat actuel reste des `string` localisées.
 
 ## Correspondances de valeurs (référence)
@@ -64,25 +62,16 @@ Les chaînes sont **localisées** comme dans le fichier source (une langue par f
 | cold_delay | Frais si délai | Chilled if delay | 遅延 ~ 冷蔵 | 久置 ~ 冷藏 | 지연 ~ 냉장 |
 | cold_fresh_ambient | Frais ~ ambiant | Fresh ~ room temp | 冷蔵 ~ 常温 | 冷藏 ~ 常温 | 냉장 ~ 실온 |
 
-### Besoin de couvert (`cover`)
+### Ustensiles (`utensils`)
 
 | id | fr | en | ja | zh | ko |
 | -- | -- | -- | -- | -- | -- |
-| cover_no | Non | No | 不要 | 不需要 | 불필요 |
-| cover_optional | Optionnel | Optional | 任意 | 可选 | 선택 |
-| cover_yes | Oui | Yes | 必要 | 需要 | 필요 |
-
-### Modalité de consommation (`eating`, hors couvert)
-
-| id | fr | en | ja | zh | ko |
-| -- | -- | -- | -- | -- | -- |
-| eating_hand | À la main | By hand | 手づかみ | 手抓 | 손으로 |
-| eating_cutlery | Couverts | Cutlery | カトラリー | 餐具 | 수저 |
-| eating_chopsticks | Baguettes | Chopsticks | 箸 | 筷子 | 젓가락 |
-| eating_chopsticks_cutlery | Baguettes ~ Couverts | Chopsticks ~ cutlery | 箸 ~ カトラリー | 筷子 ~ 餐具 | 젓가락 ~ 수저 |
-| eating_hand_chopsticks | À la main ~ Baguettes | Hand ~ chopsticks | 手づかみ ~ 箸 | 手抓 ~ 筷子 | 손 ~ 젓가락 |
-
-**Modalité (`eating`) :** pour **deux options** (baguettes ou couverts, main ou baguettes, etc.), utiliser **` ~ `** plutôt que « ou » (même convention que les ingrédients et le réchauffage).
+| utensils_hand_cutlery | À la main ~ Couverts | By hand ~ cutlery | 手づかみ ~ カトラリー | 手抓 ~ 餐具 | 손으로 ~ 수저 |
+| utensils_hand_chopsticks | À la main ~ Baguettes | Hand ~ chopsticks | 手づかみ ~ 箸 | 手抓 ~ 筷子 | 손 ~ 젓가락 |
+| utensils_chopsticks_cutlery | Baguettes ~ Couverts | Chopsticks ~ cutlery | 箸 ~ カトラリー | 筷子 ~ 餐具 | 젓가락 ~ 수저 |
+| utensils_cutlery | Couverts | Cutlery | カトラリー | 餐具 | 수저 |
+| utensils_chopsticks | Baguettes | Chopsticks | 箸 | 筷子 | 젓가락 |
+| utensils_hand | À la main | By hand | 手づかみ | 手抓 | 손으로 |
 
 ### Taches (`stains`)
 
@@ -110,4 +99,6 @@ Les chaînes sont **localisées** comme dans le fichier source (une langue par f
 
 ## Compatibilité
 
-Les champs JSON **`leaks`** et **`prep_ahead`** ne sont plus émis ; ils sont remplacés par **`stains`** et **`prep_time`**. Les recettes et le parseur acceptent encore l’ancien format fichier (4 lignes de base ou anciennes lignes optionnelles sans `cover`) avec heuristique côté parseur ; les fichiers du dépôt sont migrés vers le **format 5–10 lignes** documenté ci-dessus.
+Les champs JSON **`leaks`** et **`prep_ahead`** ne sont plus émis ; ils sont remplacés par **`stains`** et **`prep_time`**. Les champs **`cover`** et **`eating`** ne sont plus émis ; le fichier utilise une seule ligne / **`utensils`**.
+
+Le parseur accepte encore l’**ancien format fichier** avec **deux lignes** (couvert + manger) aux rangs 4–5, ainsi que l’ancien format `Préfixe|valeur` avec clés `Couvert` et `Manger`, et fusionne en **`utensils`**.

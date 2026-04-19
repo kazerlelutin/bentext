@@ -86,8 +86,7 @@ func isLegacyBentoSection(section string) bool {
 	return false
 }
 
-// valueOnlyBentoShape: 5–10 lines, aucun '|' (les libellés sont uniquement dans le JSON).
-// Ancien format 4–9 lignes (sans couvert) : détecté et parsé par parseValueOnlyBentoLines.
+// valueOnlyBentoShape: 4–10 lignes sans '|'. Nouveau format 4–9 ; ancien avec cover+eating séparés jusqu’à 10.
 func valueOnlyBentoShape(section string) bool {
 	lines := nonEmptyLines(section)
 	n := len(lines)
@@ -99,8 +98,7 @@ func valueOnlyBentoShape(section string) bool {
 			return false
 		}
 	}
-	// Nouveau : 5–10 lignes ; ancien : 4–9 lignes (4 lignes de base sans cover).
-	return n >= 4 && n <= 10
+	return true
 }
 
 func isBentoBlock(section string) bool {
@@ -192,6 +190,7 @@ func parseBentoBlock(section string) *Bento {
 		return b
 	}
 	if isLegacyBentoSection(section) {
+		var coverLegacy, eatingLegacy string
 		for _, line := range lines {
 			key, val, ok := strings.Cut(line, "|")
 			if !ok {
@@ -207,9 +206,9 @@ func parseBentoBlock(section string) *Bento {
 			case "Froid":
 				b.Cold = val
 			case "Couvert":
-				b.Cover = val
+				coverLegacy = val
 			case "Manger":
-				b.Eating = val
+				eatingLegacy = val
 			case "Tâches":
 				b.Stains = val
 			case "Fuites": // legacy → stains
@@ -226,59 +225,80 @@ func parseBentoBlock(section string) *Bento {
 				b.ExtraNotes = val
 			}
 		}
+		if coverLegacy != "" || eatingLegacy != "" {
+			b.Utensils = MergeCoverEating(coverLegacy, eatingLegacy)
+		}
 		return b
 	}
 	return parseValueOnlyBentoLines(lines, b)
 }
 
 // parseValueOnlyBentoLines remplit b à partir de lignes sans préfixe.
-// Nouveau format (5–10 lignes) : transport, reheat, cold, cover, eating, stains, smell, prep_time, holding, extra_notes.
-// Ancien format (4 lignes) : transport, reheat, cold, eating (sans cover).
-// Ancien format (5–9 lignes) : + leaks, smell, prep_ahead, holding, extra_notes (sans cover ligne dédiée).
+// Nouveau format (4–9 lignes) : transport, reheat, cold, utensils, stains, smell, prep_time, holding, extra_notes.
+// Ancien format (5–10 lignes) : transport, reheat, cold, cover, eating, … — fusion cover+eating → utensils.
+// Ancien format (4 lignes) : transport, reheat, cold, eating seul (sans cover).
+// Ancien format (5–9 lignes sans cover) : voir parseLegacyValueOnlyBento5to9.
 func parseValueOnlyBentoLines(lines []string, b *Bento) *Bento {
 	n := len(lines)
-	if n == 4 {
-		// Legacy 4-line base
-		b.Transport = lines[0]
-		b.Reheat = lines[1]
-		b.Cold = lines[2]
-		b.Eating = lines[3]
+	if n < 4 {
 		return b
 	}
-	if n >= 5 && isLegacyValueOnlyBentoWithoutCover(lines) {
+
+	// Ancien format : ligne 4 = token couvert court, ligne 5 = manger (fusion)
+	if n >= 5 && n <= 10 {
+		l4 := strings.TrimSpace(lines[3])
+		lower := strings.ToLower(l4)
+		if isShortCoverToken(l4, lower) {
+			b.Transport = lines[0]
+			b.Reheat = lines[1]
+			b.Cold = lines[2]
+			if n >= 5 {
+				b.Utensils = MergeCoverEating(lines[3], lines[4])
+			}
+			if n >= 6 {
+				b.Stains = lines[5]
+			}
+			if n >= 7 {
+				b.Smell = lines[6]
+			}
+			if n >= 8 {
+				b.PrepTime = lines[7]
+			}
+			if n >= 9 {
+				b.Holding = lines[8]
+			}
+			if n >= 10 {
+				b.ExtraNotes = lines[9]
+			}
+			return b
+		}
+	}
+
+	// Ancien 5–9 lignes sans ligne couvert dédiée (eating à l’index 3)
+	if n >= 5 && n <= 9 && isLegacyValueOnlyBentoWithoutCover(lines) {
 		parseLegacyValueOnlyBento5to9(lines, b)
 		return b
 	}
-	// New format 5–10
-	if n >= 1 {
-		b.Transport = lines[0]
-	}
-	if n >= 2 {
-		b.Reheat = lines[1]
-	}
-	if n >= 3 {
-		b.Cold = lines[2]
-	}
-	if n >= 4 {
-		b.Cover = lines[3]
-	}
+
+	// Nouveau format : utensils index 3, optionnel à partir de 4
+	b.Transport = lines[0]
+	b.Reheat = lines[1]
+	b.Cold = lines[2]
+	b.Utensils = lines[3]
 	if n >= 5 {
-		b.Eating = lines[4]
+		b.Stains = lines[4]
 	}
 	if n >= 6 {
-		b.Stains = lines[5]
+		b.Smell = lines[5]
 	}
 	if n >= 7 {
-		b.Smell = lines[6]
+		b.PrepTime = lines[6]
 	}
 	if n >= 8 {
-		b.PrepTime = lines[7]
+		b.Holding = lines[7]
 	}
 	if n >= 9 {
-		b.Holding = lines[8]
-	}
-	if n >= 10 {
-		b.ExtraNotes = lines[9]
+		b.ExtraNotes = lines[8]
 	}
 	return b
 }
@@ -343,7 +363,7 @@ func parseLegacyValueOnlyBento5to9(lines []string, b *Bento) {
 	b.Transport = lines[0]
 	b.Reheat = lines[1]
 	b.Cold = lines[2]
-	b.Eating = lines[3]
+	b.Utensils = lines[3]
 	if n >= 5 {
 		b.Stains = lines[4] // was leaks
 	}
@@ -365,7 +385,7 @@ func (b *Bento) isEmpty() bool {
 	if b == nil {
 		return true
 	}
-	return b.Transport == "" && b.Reheat == "" && b.Cold == "" && b.Cover == "" && b.Eating == "" &&
+	return b.Transport == "" && b.Reheat == "" && b.Cold == "" && b.Utensils == "" &&
 		b.Stains == "" && b.Smell == "" && b.PrepTime == "" && b.Holding == "" && b.ExtraNotes == ""
 }
 

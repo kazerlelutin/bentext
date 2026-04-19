@@ -37,14 +37,23 @@ var Cold = []VocabRow{
 	{Key: "cold_fresh_ambient", FR: "Frais ~ ambiant", EN: "Fresh ~ room temp", JA: "冷蔵 ~ 常温", ZH: "冷藏 ~ 常温", KO: "냉장 ~ 실온"},
 }
 
-// Cover need (cutlery).
+// Utensils : une seule ligne fichier / champ JSON `utensils` — besoin de couverts et modalité (main, baguettes, couverts, combinaisons avec ` ~ `).
+var Utensils = []VocabRow{
+	{Key: "utensils_hand_cutlery", FR: "À la main ~ Couverts", EN: "By hand ~ cutlery", JA: "手づかみ ~ カトラリー", ZH: "手抓 ~ 餐具", KO: "손으로 ~ 수저"},
+	{Key: "utensils_hand_chopsticks", FR: "À la main ~ Baguettes", EN: "Hand ~ chopsticks", JA: "手づかみ ~ 箸", ZH: "手抓 ~ 筷子", KO: "손 ~ 젓가락"},
+	{Key: "utensils_chopsticks_cutlery", FR: "Baguettes ~ Couverts", EN: "Chopsticks ~ cutlery", JA: "箸 ~ カトラリー", ZH: "筷子 ~ 餐具", KO: "젓가락 ~ 수저"},
+	{Key: "utensils_cutlery", FR: "Couverts", EN: "Cutlery", JA: "カトラリー", ZH: "餐具", KO: "수저"},
+	{Key: "utensils_chopsticks", FR: "Baguettes", EN: "Chopsticks", JA: "箸", ZH: "筷子", KO: "젓가락"},
+	{Key: "utensils_hand", FR: "À la main", EN: "By hand", JA: "手づかみ", ZH: "手抓", KO: "손으로"},
+}
+
+// Cover et Eating : ancienne décomposition (référence) ; le format fichier actuel n’a qu’une ligne `utensils`.
 var Cover = []VocabRow{
 	{Key: "cover_no", FR: "Non", EN: "No", JA: "不要", ZH: "不需要", KO: "불필요"},
 	{Key: "cover_optional", FR: "Optionnel", EN: "Optional", JA: "任意", ZH: "可选", KO: "선택"},
 	{Key: "cover_yes", FR: "Oui", EN: "Yes", JA: "必要", ZH: "需要", KO: "필요"},
 }
 
-// Eating modality (without cover). Si les couverts sont possibles mais pas obligatoires, utiliser cover=Optionnel et eating=« à la main » (une seule notion par champ pour le tri). Deux modalités équivalentes : « ~ » comme les ingrédients (ex. Baguettes ~ Couverts).
 var Eating = []VocabRow{
 	{Key: "eating_hand", FR: "À la main", EN: "By hand", JA: "手づかみ", ZH: "手抓", KO: "손으로"},
 	{Key: "eating_cutlery", FR: "Couverts", EN: "Cutlery", JA: "カトラリー", ZH: "餐具", KO: "수저"},
