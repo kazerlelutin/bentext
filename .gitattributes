@@ -1,0 +1,2 @@
+# Scripts shell : LF obligatoire (sinon shebang invalide sous Linux/Docker)
+*.sh text eol=lf
