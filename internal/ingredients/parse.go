@@ -3,7 +3,7 @@ package ingredients
 import (
 	"bufio"
 	"fmt"
-	"os"
+	"io"
 	"strconv"
 	"strings"
 )
@@ -28,16 +28,10 @@ type Store struct {
 
 // Load reads a bentext file and returns a Store. Format: blocks separated by "---",
 // first line of each block is "row col", following lines are one alias per line.
-// Returns nil if the file cannot be read (caller may use empty Store).
-func Load(path string) (*Store, error) {
-	f, err := os.Open(path)
-	if err != nil {
-		return nil, err
-	}
-	defer f.Close()
-
+// The caller opens the file and controls the path; this function only consumes the reader.
+func Load(r io.Reader) (*Store, error) {
 	byAlias := make(map[string]Sprite)
-	scanner := bufio.NewScanner(f)
+	scanner := bufio.NewScanner(r)
 	var block []string
 
 	flushBlock := func() {

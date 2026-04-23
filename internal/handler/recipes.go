@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -49,7 +50,7 @@ func serveRecipeList(w http.ResponseWriter, r *http.Request) {
 
 	var result []*recipe.Recipe
 	for _, entry := range entries {
-		content, err := readFileContent(filepath.Join(recipesDir, entry.Name()))
+		content, err := readFileUnderRoot(recipesDir, entry.Name())
 		if err != nil {
 			log.Printf("recipes: lecture %s: %v", entry.Name(), err)
 			continue
@@ -101,8 +102,7 @@ func serveRecipeByPath(w http.ResponseWriter, r *http.Request, rest string) {
 
 	dir := recipesDir()
 	fname := slug + "." + lang + ".bentext"
-	fpath := filepath.Join(dir, fname)
-	content, err := readFileContent(fpath)
+	content, err := readFileUnderRoot(dir, fname)
 	if err != nil {
 		if os.IsNotExist(err) {
 			http.NotFound(w, r)
@@ -186,8 +186,24 @@ func readRecipeFiles(dir string) ([]os.DirEntry, error) {
 	return files, nil
 }
 
-func readFileContent(path string) (string, error) {
-	b, err := os.ReadFile(path)
+// readFileUnderRoot reads a single file name inside root (no path segments, no traversal).
+func readFileUnderRoot(root, name string) (string, error) {
+	if name == "" || name != filepath.Base(name) {
+		return "", fmt.Errorf("invalid path")
+	}
+	rootAbs, err := filepath.Abs(filepath.Clean(root))
+	if err != nil {
+		return "", err
+	}
+	fullAbs, err := filepath.Abs(filepath.Join(rootAbs, name))
+	if err != nil {
+		return "", err
+	}
+	rel, err := filepath.Rel(rootAbs, fullAbs)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		return "", fmt.Errorf("invalid path")
+	}
+	b, err := os.ReadFile(fullAbs)
 	if err != nil {
 		return "", err
 	}

@@ -12,7 +12,8 @@ COPY . .
 
 RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o main ./cmd/api
 
-FROM alpine:latest
+# Pinned runtime image (avoid :latest for reproducibility and supply-chain clarity)
+FROM alpine:3.21
 
 RUN apk --no-cache add ca-certificates wget
 

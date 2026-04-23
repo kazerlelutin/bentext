@@ -34,7 +34,16 @@ func dataPath() string {
 func ensureLoaded() {
 	once.Do(func() {
 		path := dataPath()
-		store, loadErr = Load(path)
+		f, err := os.Open(path)
+		if err != nil {
+			store, loadErr = nil, err
+			if store == nil {
+				store = &Store{byAlias: make(map[string]Sprite)}
+			}
+			return
+		}
+		defer f.Close()
+		store, loadErr = Load(f)
 		if loadErr != nil && store == nil {
 			store = &Store{byAlias: make(map[string]Sprite)}
 		}
