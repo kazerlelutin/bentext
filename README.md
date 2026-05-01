@@ -136,6 +136,8 @@ Synonyms that are **not** close in spelling or as a leading word sequence (e.g. 
 
 `GET /api/ingredients/sprite` exposes coordinates keyed by **explicit** aliases only (including every segment after splitting on `|`). Prefix and Levenshtein fallbacks apply when enriching recipe JSON and `GET /api/ingredients/lookup?q=…`.
 
+The server **reloads** `ingredient-sprites.bentext` when the file’s modification time changes, so new `|` aliases show up in `byAlias` without restarting the process (after you save the file).
+
 `**public/ingredient-sprites.csv`** is a human-readable grid of the same layout (optional `|` in a cell, e.g. `beurre|beurre doux`); it is not read by the server. Edit `**ingredient-sprites.bentext**` for behavior changes.
 
 ### Section 2 – Steps

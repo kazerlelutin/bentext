@@ -4,14 +4,17 @@ import (
 	"os"
 	"path/filepath"
 	"sync"
+	"time"
 )
 
 const dataFile = "ingredient-sprites.bentext"
 
 var (
-	once   sync.Once
-	store  *Store
-	loadErr error
+	mu          sync.Mutex
+	store       *Store
+	loadErr     error
+	cachedPath  string
+	cachedMTime time.Time
 )
 
 // dataPath returns the path to ingredient-sprites.bentext (cwd then next to executable).
@@ -30,24 +33,48 @@ func dataPath() string {
 	return cwd
 }
 
-// ensureLoaded loads the store once.
+func emptyStore() *Store {
+	return &Store{byAlias: make(map[string]Sprite)}
+}
+
+// ensureLoaded loads or reloads the store when ingredient-sprites.bentext changes (mtime).
 func ensureLoaded() {
-	once.Do(func() {
-		path := dataPath()
-		f, err := os.Open(path)
-		if err != nil {
-			store, loadErr = nil, err
-			if store == nil {
-				store = &Store{byAlias: make(map[string]Sprite)}
-			}
-			return
-		}
-		defer f.Close()
-		store, loadErr = Load(f)
-		if loadErr != nil && store == nil {
-			store = &Store{byAlias: make(map[string]Sprite)}
-		}
-	})
+	path := dataPath()
+	info, statErr := os.Stat(path)
+
+	mu.Lock()
+	defer mu.Unlock()
+
+	if statErr != nil {
+		store = emptyStore()
+		loadErr = statErr
+		cachedPath = ""
+		cachedMTime = time.Time{}
+		return
+	}
+
+	if store != nil && path == cachedPath && info.ModTime().Equal(cachedMTime) {
+		return
+	}
+
+	f, err := os.Open(path)
+	if err != nil {
+		store = emptyStore()
+		loadErr = err
+		cachedPath = ""
+		cachedMTime = time.Time{}
+		return
+	}
+	defer f.Close()
+
+	st, err := Load(f)
+	loadErr = err
+	if st == nil {
+		st = emptyStore()
+	}
+	store = st
+	cachedPath = path
+	cachedMTime = info.ModTime()
 }
 
 // Lookup returns sprite coordinates in pixels for the given ingredient name (any language/alias).
