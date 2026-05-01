@@ -231,10 +231,19 @@ go build -o bentext-api ./cmd/api
 ./bentext-api
 ```
 
+## Security (CI)
+
+On GitHub, **[`.github/workflows/ci.yml`](.github/workflows/ci.yml)** runs `go vet`, tests, **[govulncheck](https://go.dev/doc/security/vuln/)** (known vulnerabilities affecting your code and the standard library), and **[Trivy](https://github.com/aquasecurity/trivy)** on the repository filesystem and on the Docker image built from [`Dockerfile`](Dockerfile). Scans use severity **HIGH** and **CRITICAL** and **`ignore-unfixed: true`** to reduce noise from distro advisories without patches.
+
+**[Dependabot](https://docs.github.com/en/code-security/dependabot)** ([`.github/dependabot.yml`](.github/dependabot.yml)) opens weekly PRs for Go modules, base Docker images, and GitHub Actions used in workflows.
+
 ## Project layout
 
 ```
 bentext/
+├── .github/
+│   ├── workflows/      # CI: tests, govulncheck, Trivy
+│   └── dependabot.yml  # Weekly dependency updates
 ├── cmd/
 │   ├── api/            # HTTP server entrypoint
 │   └── check-recipes/  # CLI: language coverage per recipe slug
