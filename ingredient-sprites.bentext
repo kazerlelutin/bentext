@@ -24,7 +24,7 @@ jus d'orange
 jus de citron vert
 ---
 2 4
-lait
+lait|crême fraîche liquide entière
 ---
 2 5
 chocolat fondu|sauce soja|aromate pistache
@@ -93,7 +93,7 @@ poire
 betterave
 ---
 8 1
-carotte
+carotte| carottes râpées
 ---
 8 2
 feuille de nori
@@ -119,6 +119,9 @@ gingembre
 8 9
 navet
 ---
+8 10
+danmuji|radis jaune
+---
 9 0
 haricots noirs
 ---
@@ -135,31 +138,37 @@ mais
 epinard
 ---
 9 5
-oignon
+courge
 ---
 9 6
+oignon
+---
+9 7
 piment rouge
 ---
-9 7
+9 8
 ciboulette
 ---
-9 7
-poivron vert
----
-9 8
+9 9
 ciboule
 ---
+9 10
+poivron vert
+---
+9 9 
+piment vert
+---
 10 0
-oeuf|oeufs
+oeuf|oeufs|œufs|œuf
 ---
 10 1
-jaune d'oeuf
+jaune d'oeuf|jaune d'œufs|jaune d'œuf
 ---
 10 2
-blanc d'oeuf
+blanc d'oeuf|blanc d'œufs|blanc d'œuf
 ---
 12 0
-sel|bicarbonate
+sel|bicarbonate|fleur de sel
 ---
 12 1
 poivre
@@ -168,13 +177,16 @@ poivre
 poudre verte
 ---
 12 3
+poudre beige|poudre d'amande|poudre d'amandes
+---
+12 3
 canelle en poudre|cannelle|cassonade|sucre brun
 ---
 12 4
 gingembre en poudre
 ---
 12 5
-poudre blanche|sucre en poudre|sucre|fecule|levure chimique
+poudre blanche|sucre en poudre|sucre|fécule|fécule de maïs|levure chimique
 ---
 12 6
 poudre rouge|piment de cayenne
@@ -188,7 +200,7 @@ vanille
 13 1
 noisette|noisettes
 ---
-14 0
+14 0---
 pepite de chocolat au lait
 ---
 14 1
@@ -213,13 +225,13 @@ beurre|beurre doux
 mozzarella
 ---
 16 3
-comté
+comté|gruyère
 ---
 16 4
 cheddar
 ---
 16 5
-fromage frais
+fromage frais|yaourt grec
 ---
 18 0
 farine
@@ -231,7 +243,7 @@ sucre de canne
 riz
 ---
 20 0
-graine de sesame
+graine de sesame|graines de lin
 ---
 21 0
 arachide
