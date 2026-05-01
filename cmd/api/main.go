@@ -11,7 +11,7 @@ import (
 )
 
 const (
-	rateLimitRequests = 100
+	rateLimitRequests = 200
 	rateLimitWindow   = time.Minute
 )
 
