@@ -12,10 +12,10 @@ fouet
 baguettes
 ---
 2 0
-eau
+eau|vinaigre de riz
 ---
 2 1
-huile
+huile|jus de citron
 ---
 2 2
 jus d'orange
@@ -27,7 +27,7 @@ jus de citron vert
 lait
 ---
 2 5
-chocolat fondu
+chocolat fondu|sauce soja|aromate pistache
 ---
 4 0
 onigiri
@@ -109,7 +109,7 @@ poivron orange
 ---
 8 6
 poivron vert
----  "variant:dan-bing": "oeuf",
+---
 8 7
 poivron jaune
 ---
@@ -143,11 +143,14 @@ piment rouge
 9 7
 ciboulette
 ---
+9 7
+poivron vert
+---
 9 8
 ciboule
 ---
 10 0
-oeuf
+oeuf|oeufs
 ---
 10 1
 jaune d'oeuf
@@ -156,7 +159,7 @@ jaune d'oeuf
 blanc d'oeuf
 ---
 12 0
-sel
+sel|bicarbonate
 ---
 12 1
 poivre
@@ -165,22 +168,25 @@ poivre
 poudre verte
 ---
 12 3
-canelle en poudre
+canelle en poudre|cannelle|cassonade|sucre brun
 ---
 12 4
 gingembre en poudre
 ---
 12 5
-poudre blanche
+poudre blanche|sucre en poudre|sucre|fecule|levure chimique
 ---
 12 6
-poudre rouge
+poudre rouge|piment de cayenne
 ---
 12 7
 poudre orange
 ---
 13 0
 vanille
+---
+13 1
+noisette|noisettes
 ---
 14 0
 pepite de chocolat au lait
@@ -189,10 +195,13 @@ pepite de chocolat au lait
 pepites de chocolat noir
 ---
 14 2
-pepite de chocolat blanc
+pepite de chocolat blanc|chocolat blanc
 ---
 15 0
-tablette chocolat
+tablette chocolat|chocolat
+---
+15 1
+tablette chocolat blanc|chocolat blanc
 ---
 16 0
 emmental
@@ -217,6 +226,9 @@ farine
 ---
 18 1
 sucre de canne
+---
+19 0
+riz
 ---
 20 0
 graine de sesame

@@ -7,10 +7,10 @@ HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** (
 ## Run the API
 
 ```bash
-joutée : après échec du matc
+go run ./cmd/api
 ```
 
-Server listens on **[http://localhost:8080](http://localhost:8080)**.joutée : après échec du matc
+Server listens on **[http://localhost:8080](http://localhost:8080)**.
 
 ## Endpoints
 
@@ -138,7 +138,7 @@ Synonyms that are **not** close in spelling or as a leading word sequence (e.g. 
 
 The server **reloads** `ingredient-sprites.bentext` when the file’s modification time changes, so new `|` aliases show up in `byAlias` without restarting the process (after you save the file).
 
-`**public/ingredient-sprites.csv`** is a human-readable grid of the same layout (optional `|` in a cell, e.g. `beurre|beurre doux`); it is not read by the server. Edit `**ingredient-sprites.bentext**` for behavior changes.
+`**public/ingredient-sprites.csv`** is only a layout / design aid (optional `|` per cell). **The server never reads this file:** anything you add to the CSV must be **copied into `ingredient-sprites.bentext`** (same `row col` block, same `a|b|c` syntax on one line) or it will **not** appear in `GET /api/ingredients/sprite`. Treat **bentext** as the source of truth for the API; keep the CSV in sync manually if you use both.
 
 ### Section 2 – Steps
 
