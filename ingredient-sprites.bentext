@@ -53,6 +53,21 @@ tofu
 4 7
 udon
 ---
+4 8
+dan bing
+---
+4 9
+mandu
+---
+4 10
+muffin
+---
+4 11
+madelaine
+---
+4 12
+naan
+---
 5 0
 gateau de savoie
 ---
@@ -94,7 +109,7 @@ poivron orange
 ---
 8 6
 poivron vert
----
+---  "variant:dan-bing": "oeuf",
 8 7
 poivron jaune
 ---
@@ -183,7 +198,7 @@ tablette chocolat
 emmental
 ---
 16 1
-beurre
+beurre|beurre doux
 ---
 16 2
 mozzarella

@@ -7,10 +7,10 @@ HTTP API in Go (standard library) to parse and serve recipes in the **bentxt** (
 ## Run the API
 
 ```bash
-go run ./cmd/api
+joutée : après échec du matc
 ```
 
-Server listens on **[http://localhost:8080](http://localhost:8080)**.
+Server listens on **[http://localhost:8080](http://localhost:8080)**.joutée : après échec du matc
 
 ## Endpoints
 
@@ -124,6 +124,20 @@ Examples of block counts (identity + ingredients + steps + …):
 
 Ingredient names in JSON may get an optional `icon` (`x`, `y` in the ingredient sprite) when resolved via `/api/ingredients`.
 
+### Ingredient sprite sheet
+
+Icons come from the `**ingredient-sprites.bentext`** file at the repository root (same format for the running API and Docker image). Each block is separated by a line `---`. The first line of a block is `row col` (grid cell in the 32×32 sprite sheet), then one or more **alias** lines.
+
+- **Several names for one sprite:** use `|` on the same line. Example: `beurre|beurre doux` maps both names to the same cell. Spaces around `|` are ignored.
+- **No exact alias:** the resolver tries **leading word sequences** from the full name (normalized: trim + lowercase), longest match first. Example: `beurre doux` uses the sprite registered for `beurre` if `beurre doux` is not listed. If both `citron` and `citron vert` exist, `citron vert` picks the more specific entry.
+- **Still no match:** it picks the registered alias with smallest **Levenshtein** distance if that distance is **≤ 2**. The query and candidate must each have at least **4 runes**, so very short names skip this step (fewer false positives). If two aliases tie on distance, the **longer** alias wins.
+
+Synonyms that are **not** close in spelling or as a leading word sequence (e.g. `margarine` vs `beurre`) must still be listed explicitly with `|`.
+
+`GET /api/ingredients/sprite` exposes coordinates keyed by **explicit** aliases only (including every segment after splitting on `|`). Prefix and Levenshtein fallbacks apply when enriching recipe JSON and `GET /api/ingredients/lookup?q=…`.
+
+`**public/ingredient-sprites.csv`** is a human-readable grid of the same layout (optional `|` in a cell, e.g. `beurre|beurre doux`); it is not read by the server. Edit `**ingredient-sprites.bentext**` for behavior changes.
+
 ### Section 2 – Steps
 
 One step per line.
@@ -230,7 +244,8 @@ bentext/
 │   ├── handler/        # HTTP handlers (recipes, convert, ingredients, …)
 │   ├── recipe/         # Bentxt parsing (identity … bento)
 │   └── ingredients/    # Icon lookup & sprite metadata
-├── public/             # Static assets (recipe images)
+├── public/             # Static assets (recipe images, ingredient-sprites.csv layout reference)
+├── ingredient-sprites.bentext  # Sprite grid aliases (section Ingredient sprite sheet)
 ├── recipes/            # *.bentext (e.g. *.fr.bentext)
 ├── scripts/            # Optional tooling (e.g. batch edits, migrate_bento_v2.py)
 ├── go.mod
