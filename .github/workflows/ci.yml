@@ -12,8 +12,9 @@ permissions:
   contents: read
 
 env:
-  # Aligné avec le Dockerfile (stage builder). govulncheck v1.3+ exige Go ≥ 1.25.
-  GO_VERSION: "1.25"
+  # On suit la dernière release stable de Go côté CI pour récupérer
+  # automatiquement les correctifs de la stdlib (cf. govulncheck).
+  GO_VERSION: "stable"
 
 jobs:
   go:
